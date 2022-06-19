@@ -1,0 +1,25 @@
+{
+  "name": "typegenerator",
+  "version": "1.0.0",
+  "description": "Script to generate classes for C++ and types for Typescript from JSON data",
+  "main": "bin/index.js",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc -w",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MckAudio/TypeGenerator.git"
+  },
+  "author": "MckAudio",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/MckAudio/TypeGenerator/issues"
+  },
+  "homepage": "https://github.com/MckAudio/TypeGenerator#readme",
+  "devDependencies": {
+    "@types/node": "^18.0.0",
+    "typescript": "^4.7.4"
+  }
+}
