@@ -1,0 +1,29 @@
+{
+    "ExampleClass": {
+        "type": "class",
+        "members": {
+            "signedMember": {
+                "type": "signed",
+                "default": 0
+            },
+            "floatMember": {
+                "type": "float",
+                "default": 3.14
+            },
+            "arrayMember": {
+                "items": {
+                    "name": "SimpleClass"
+                }
+            }
+        }
+    },
+    "SimpleClass": {
+        "type": "class",
+        "members": {
+            "boolMember": {
+                "type": "bool",
+                "default": false
+            }
+        }
+    }
+}

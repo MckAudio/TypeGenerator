@@ -1,15 +1,28 @@
+export interface Dictionary<Type> {
+    [name: string]: Type
+}
+
 export class ClassType {
-    name: string = "";
     type: "class" | "struct" = "struct";
     parent?: string;
-    members: Array<ClassType | SimpleType> = [];
+    members: Dictionary<SimpleType | LinkType | ArrayType> = {};
 }
 
 export class SimpleType {
-    name: string = "";
-    type: "signed" | "unsigned" | "float" | "string" | "bool" = "bool";
-    isArray: boolean = false;
+    type: "signed" | "unsigned" | "float" | "string" | "bool" | "boolean" = "bool";
+    visibility: "public" | "protected" | "private" = "public";
     minimum?: number;
     maximum?: number;
     default?: number | string | boolean;
+}
+
+export class ArrayType {
+    visibility: "public" | "protected" | "private" = "public";
+    items: SimpleType | LinkType = new SimpleType();
+}
+
+export class LinkType {
+    name: string = "";
+    visibility: "public" | "protected" | "private" = "public";
+    file?: string;
 }
