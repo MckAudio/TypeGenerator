@@ -12,7 +12,7 @@ declare global {
     }
 }
 
-String.prototype.isOneOf = function(this: string, keys: Array<string>): boolean {
+String.prototype.isOneOf = function (this: string, keys: Array<string>): boolean {
     return keys.findIndex((val) => val == this) >= 0;
 }
 
@@ -70,14 +70,20 @@ function ReadClass(fileName: string, name: string, data?: ClassType): any {
                 (cl.members[entry[0]] as ArrayType).items = Copy(arrVal);
             } else if (arr.items.type == "link") {
                 let link = arr.items as LinkType;
-                let linkFileName = link.file != undefined ? link.file : fileMap[fileId].path;
+                let linkFileName = fileMap[fileId].path;
+                if (link.file !== undefined) {
+                    linkFileName = path.join(path.dirname(fileMap[fileId].path), link.file);
+                }
                 let linkFileId = path.basename(linkFileName, path.extname(linkFileName));
                 let linkId = `${linkFileId}_${link.name}`;
                 ReadClass(linkFileName, link.name);
             }
         } else if (entry[1].type == "link") {
             let link = entry[1] as LinkType;
-            let linkFileName = link.file != undefined ? link.file : fileMap[fileId].path;
+            let linkFileName = fileMap[fileId].path;
+            if (link.file !== undefined) {
+                linkFileName = path.join(path.dirname(fileMap[fileId].path), link.file);
+            }
             let linkFileId = path.basename(linkFileName, path.extname(linkFileName));
             let linkId = `${linkFileId}_${link.name}`;
             ReadClass(linkFileName, link.name);
@@ -114,20 +120,22 @@ function ReadFile(file: string) {
     fileMap[fileId].parsed = true;
 }
 
-function WriteFileSources(fileId: string, outDir: string)
-{
+function WriteFileSources(fileId: string, outDir?: string) {
     let fileData = fileMap[fileId];
-    let root = path.join(path.dirname(fileData.path), outDir);
-    if (fs.existsSync(root) === false) {
-        fs.mkdirSync(root, {recursive: true});
+    let root = path.dirname(fileData.path);
+    if (outDir !== undefined) {
+        root = path.join(root, outDir);
+        if (fs.existsSync(root) === false) {
+            fs.mkdirSync(root, { recursive: true });
+        }
     }
     Object.entries(sources[fileId]).forEach(entry => {
         let sourceRoot = path.join(root, entry[0]);
         if (fs.existsSync(sourceRoot) === false) {
-            fs.mkdirSync(sourceRoot, {recursive: true});
+            fs.mkdirSync(sourceRoot, { recursive: true });
         }
         let outFileName = path.join(sourceRoot, `${fileId}.${entry[0]}`)
-        fs.writeFileSync(outFileName, entry[1].getOutput(), { encoding: 'utf-8'});
+        fs.writeFileSync(outFileName, entry[1].getOutput(), { encoding: 'utf-8' });
     });
 }
 
@@ -149,7 +157,7 @@ function main(argc: number, argv: Array<any>) {
         Object.entries(fileMap).forEach(entry => {
             if (entry[1].parsed) {
                 console.log(`Successfully parsed file "${entry[0]}" in path "${entry[1].path}"`);
-                WriteFileSources(entry[0], "out");
+                WriteFileSources(entry[0]);
             } else {
                 console.log(`Failed to parse file "${entry[0]}" in path "${entry[1].path}"`);
             }

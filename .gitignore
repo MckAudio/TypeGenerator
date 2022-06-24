@@ -1,4 +1,7 @@
 node_modules
 bin
 out
+example/cpp
+example/hpp
+example/svelte
 package-lock.json
