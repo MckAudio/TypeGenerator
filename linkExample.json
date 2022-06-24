@@ -1,0 +1,23 @@
+{
+    "meta": {
+        "author": "Matt McK"
+    },
+    "classes": {
+        "linkExampleClass": {
+            "type": "class",
+            "members": {
+                "values": {
+                    "type": "array",
+                    "items": {
+                        "type": "float",
+                        "default": 42.23
+                    }
+                },
+                "initialized": {
+                    "type": "boolean",
+                    "default": false
+                }
+            }
+        }
+    }
+}
