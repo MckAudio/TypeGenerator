@@ -2,18 +2,6 @@ export interface Dictionary<Type> {
     [name: string]: Type
 }
 
-export class FileStore {
-    deps: Array<string> = [];
-    path: string = "";
-    parsed: boolean = false;
-    data: Dictionary<ClassType> = {};
-    sources: Dictionary<string> = {
-        cpp: "",
-        hpp: "",
-        svelte: ""
-    }
-}
-
 export class FileMeta {
     author: string = "";
 }
@@ -52,4 +40,17 @@ export class LinkType extends BaseType {
     name: string = "";
     visibility: "public" | "protected" | "private" = "public";
     file?: string;
+}
+
+
+export class FileStore {
+    deps: Array<string> = [];
+    path: string = "";
+    parsed: boolean = false;
+    data: Dictionary<ClassType> = {};
+    sources: Dictionary<string> = {
+        cpp: "",
+        hpp: "",
+        svelte: ""
+    }
 }
