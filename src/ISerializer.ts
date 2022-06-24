@@ -9,7 +9,7 @@ export class SerializerData {
     sortId: number = 0;
 
     getOutput(): string {
-        return `${this.header}\n${this.content}\n${this.footer}`;
+        return `${this.header}${this.content}${this.footer}`;
     }
 };
 
@@ -27,19 +27,24 @@ abstract class ISerializerFn {
 
 export abstract class ISerializer extends ISerializerFn {
     protected store = new SerializerData();
-    protected abstract extension: string;
+    protected extension: string = "none";
 
     author: string;
-    namespaceName: string;
+    namespaceName?: string;
+    fileName: string;
     sortId: number = 0;
     private source: string = "";
     private finished: boolean = false;
     protected classes: Dictionary<SerializerData> = {};
 
-    constructor(name: string, author: string) {
+    protected indent: string = "";
+
+    protected constructor(fileName: string, author: string, extension: string, namespace?: string) {
         super();
-        this.namespaceName = name;
+        this.fileName = fileName;
         this.author = author;
+        this.extension = extension;
+        this.namespaceName = namespace;
         this.begin();
     }
 
@@ -66,7 +71,7 @@ export abstract class ISerializer extends ISerializerFn {
         if (fs.existsSync(sourceRoot) === false) {
             fs.mkdirSync(sourceRoot, { recursive: true });
         }
-        let outFileName = path.join(sourceRoot, `${this.namespaceName}.${this.extension}`)
+        let outFileName = path.join(sourceRoot, `${this.fileName}.${this.extension}`)
         fs.writeFileSync(outFileName, this.getOutput(), { encoding: 'utf-8' });
     }
 }

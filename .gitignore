@@ -3,5 +3,5 @@ bin
 out
 example/cpp
 example/hpp
-example/svelte
+example/ts
 package-lock.json

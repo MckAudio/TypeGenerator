@@ -5,6 +5,7 @@ import { ISerializer, SerializerMap } from './ISerializer';
 import fs from 'fs';
 import { CppSerializer } from './CppSerializer';
 import { HppSerializer } from './HppSerializer';
+import { TsSerializer } from './TsSerializer';
 
 declare global {
     interface String {
@@ -55,11 +56,13 @@ function ReadClass(fileName: string, name: string, data?: ClassType): any {
             }
         });
     }
-
+    
+    sources[fileId].addClassMember(name, clData);
 
     let cl = Copy(clData);
     Object.entries(clData.members).forEach(entry => {
         if (entry[1].type.isOneOf(simpleTypes)) {
+            sources[fileId].addSimpleMember(name, entry[0], entry[1] as SimpleType);
             let val = entry[1] as SimpleType;
             cl.members[entry[0]] = Copy(val);
         } else if (entry[1].type == "array") {
@@ -79,6 +82,7 @@ function ReadClass(fileName: string, name: string, data?: ClassType): any {
                 ReadClass(linkFileName, link.name);
             }
         } else if (entry[1].type == "link") {
+            sources[fileId].addLinkMember(name, entry[0], entry[1] as LinkType);
             let link = entry[1] as LinkType;
             let linkFileName = fileMap[fileId].path;
             if (link.file !== undefined) {
@@ -110,8 +114,9 @@ function ReadFile(file: string) {
     fileMap[fileId].data = obj.classes
 
     sources[fileId] = new SerializerMap();
-    sources[fileId].addSerializer(new CppSerializer(fileId, obj.meta.author));
-    sources[fileId].addSerializer(new HppSerializer(fileId, obj.meta.author));
+    sources[fileId].addSerializer(new CppSerializer(fileId, obj.meta.author, obj.meta.namespace));
+    sources[fileId].addSerializer(new HppSerializer(fileId, obj.meta.author, obj.meta.namespace));
+    sources[fileId].addSerializer(new TsSerializer(fileId, obj.meta.author, obj.meta.namespace));
 
     Object.entries(fileMap[fileId].data).forEach(entry => {
         ReadClass(file, entry[0], entry[1]);

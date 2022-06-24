@@ -4,6 +4,7 @@ export interface Dictionary<Type> {
 
 export class FileMeta {
     author: string = "";
+    namespace?: string;
 }
 
 export class FileType {
@@ -23,7 +24,7 @@ export class ClassType extends BaseType {
 
 export class SimpleType extends BaseType {
     type: "signed" | "unsigned" | "float" | "string" | "bool" | "boolean" = "bool";
-    visibility: "public" | "protected" | "private" = "public";
+    visibility?: "public" | "protected" | "private";
     minimum?: number;
     maximum?: number;
     default?: number | string | boolean;
@@ -31,14 +32,15 @@ export class SimpleType extends BaseType {
 
 export class ArrayType extends BaseType {
     type: "array" = "array";
-    visibility: "public" | "protected" | "private" = "public";
+    visibility?: "public" | "protected" | "private";
     items: SimpleType | LinkType = new SimpleType();
 }
 
 export class LinkType extends BaseType {
     type: "link" = "link";
     name: string = "";
-    visibility: "public" | "protected" | "private" = "public";
+    namespace?: string;
+    visibility?: "public" | "protected" | "private";
     file?: string;
 }
 
