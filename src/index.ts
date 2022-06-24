@@ -1,6 +1,6 @@
 import path from 'path';
 import { Dictionary, ClassType, SimpleType, ArrayType, LinkType, FileStore, FileType } from "./types";
-import { ISerializer } from './ISerializer';
+import { ISerializer, SerializerMap } from './ISerializer';
 
 import fs from 'fs';
 import { CppSerializer } from './CppSerializer';
@@ -18,7 +18,7 @@ String.prototype.isOneOf = function (this: string, keys: Array<string>): boolean
 
 let classMap: Dictionary<ClassType> = {};
 let fileMap: Dictionary<FileStore> = {};
-let sources: Dictionary<Dictionary<ISerializer>> = {};
+let sources: Dictionary<SerializerMap> = {};
 
 let debug = true;
 
@@ -109,9 +109,9 @@ function ReadFile(file: string) {
     fileMap[fileId].path = file;
     fileMap[fileId].data = obj.classes
 
-    sources[fileId] = {};
-    sources[fileId]["cpp"] = new CppSerializer(fileId, obj.meta.author);
-    sources[fileId]["hpp"] = new HppSerializer(fileId, obj.meta.author);
+    sources[fileId] = new SerializerMap();
+    sources[fileId].addSerializer(new CppSerializer(fileId, obj.meta.author));
+    sources[fileId].addSerializer(new HppSerializer(fileId, obj.meta.author));
 
     Object.entries(fileMap[fileId].data).forEach(entry => {
         ReadClass(file, entry[0], entry[1]);
@@ -129,14 +129,8 @@ function WriteFileSources(fileId: string, outDir?: string) {
             fs.mkdirSync(root, { recursive: true });
         }
     }
-    Object.entries(sources[fileId]).forEach(entry => {
-        let sourceRoot = path.join(root, entry[0]);
-        if (fs.existsSync(sourceRoot) === false) {
-            fs.mkdirSync(sourceRoot, { recursive: true });
-        }
-        let outFileName = path.join(sourceRoot, `${fileId}.${entry[0]}`)
-        fs.writeFileSync(outFileName, entry[1].getOutput(), { encoding: 'utf-8' });
-    });
+
+    sources[fileId].writeToFile(root);
 }
 
 function main(argc: number, argv: Array<any>) {
