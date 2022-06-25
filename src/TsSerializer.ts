@@ -1,8 +1,11 @@
 import { ISerializer, SerializerData } from "./ISerializer";
+import { GetTsDefault, GetTsType } from "./SerializerTools";
 import { GetDate } from "./tools";
-import { ArrayType, ClassType, LinkType, SimpleType } from "./types";
+import { ArrayType, ClassType, Dictionary, LinkType, SimpleType } from "./types";
+import path from "path";
 
 export class TsSerializer extends ISerializer {
+    protected deps: Dictionary<string> = {};
     constructor(fileName: string, author: string, namespace?: string) {
         super(fileName, author, "ts", namespace);
     }
@@ -15,6 +18,10 @@ export class TsSerializer extends ISerializer {
     }
 
     protected end() {
+        Object.entries(this.deps).forEach(dep => {
+            this.store.header += `import { ${dep[0]} } from \"./${dep[1]}\";\n`;
+        });
+        this.store.header += `\n`;
     }
 
     addClassMember(name: string, member: ClassType) {
@@ -31,14 +38,35 @@ export class TsSerializer extends ISerializer {
     }
 
     addSimpleMember(className: string, name: string, member: SimpleType) {
-
+        let tmp = this.classes[className];
+        tmp.content += `${this.indent}\t${name}: ${GetTsType(member)}`;
+        if (member.default !== undefined) {
+            if (member.type === "string") {
+                tmp.content += ` = \"${member.default}\";\n`;
+            } else {
+                tmp.content += ` = ${member.default};\n`;
+            }
+        } else {
+            tmp.content += ` = ${GetTsDefault(member)};\n`;
+        }
     }
 
     addLinkMember(className: string, name: string, member: LinkType) {
-
+        let tmp = this.classes[className];
+        tmp.content += `${this.indent}\t${name}: ${GetTsType(member)} = ${GetTsDefault(member)};\n`;
+        if (member.file !== undefined) {
+            this.deps[GetTsType(member)] = `${path.basename(member.file, path.extname(member.file))}`;
+        }
     }
 
     addArrayMember(className: string, name: string, member: ArrayType) {
-
+        let tmp = this.classes[className];
+        tmp.content += `${this.indent}\t${name}: Array<${GetTsType(member.items)}> = [];\n`;
+        if (member.items.hasOwnProperty('file')) {
+            let file = (member.items as LinkType).file;
+            if (file !== undefined) {
+                this.deps[GetTsType(member.items)] = `${path.basename(file, path.extname(file))}`;
+            }
+        }
     }
 }

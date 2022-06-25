@@ -67,6 +67,9 @@ function ReadClass(fileName: string, name: string, data?: ClassType): any {
             cl.members[entry[0]] = Copy(val);
         } else if (entry[1].type == "array") {
             let arr = entry[1] as ArrayType;
+            sources[fileId].addArrayMember(name, entry[0], entry[1] as ArrayType);
+
+
             cl.members[entry[0]] = Copy(arr);
             if (arr.items.type.isOneOf(simpleTypes)) {
                 let arrVal = arr.items as SimpleType;

@@ -1,7 +1,7 @@
 import { ISerializer, SerializerData } from "./ISerializer";
 import { ArrayType, ClassType, LinkType, SimpleType } from "./types";
 import { GetDate } from "./tools";
-import { GetCppType } from "./CppTools";
+import { GetCppType } from "./SerializerTools";
 import path from "path";
 
 export class HppSerializer extends ISerializer {
@@ -47,9 +47,13 @@ export class HppSerializer extends ISerializer {
 
     addSimpleMember(className: string, name: string, member: SimpleType) {
         let tmp = this.classes[className];
-        tmp.content += `${this.indent}\t${GetCppType(member)} ${name} {`;
+        tmp.content += `${this.indent}\t${GetCppType(member)} ${name}{`;
         if (member.default !== undefined) {
-            tmp.content += `${member.default}`;
+            if (member.type === "string") {
+                tmp.content += `\"${member.default}\"`;
+            } else {
+                tmp.content += `${member.default}`;
+            }
         }
         tmp.content += `};\n`;
         if (member.type === "string") {
@@ -59,14 +63,16 @@ export class HppSerializer extends ISerializer {
 
     addLinkMember(className: string, name: string, member: LinkType) {
         let tmp = this.classes[className];
-        tmp.content += `${this.indent}\t${GetCppType(member)} ${name} {};\n`;
+        tmp.content += `${this.indent}\t${GetCppType(member)} ${name}{};\n`;
         if (member.file !== undefined) {
             this.deps.add(`"${path.basename(member.file, path.extname(member.file))}.${this.extension}"`);
         }
     }
 
     addArrayMember(className: string, name: string, member: ArrayType) {
-
+        let tmp = this.classes[className];
+        tmp.content += `${this.indent}\tstd::vector<${GetCppType(member.items)}> ${name}{};\n`;
+        this.deps.add(`<vector>`);
     }
 
 }
