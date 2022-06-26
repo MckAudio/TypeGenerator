@@ -43,6 +43,18 @@
                     "type": "link",
                     "name": "linkExampleClass",
                     "file": "linkExample.json"
+                },
+                "myNumbers": {
+                    "type": "array",
+                    "items": {
+                        "type": "float"
+                    }
+                },
+                "myStrings": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 }
             }
         }

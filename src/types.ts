@@ -56,3 +56,8 @@ export class FileStore {
         svelte: ""
     }
 }
+
+export function IsSimpleType(type: BaseType)
+{
+    return ["signed", "unsigned", "float", "string", "bool", "boolean"].findIndex(s => s === type.type) >= 0;
+}
