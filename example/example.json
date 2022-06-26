@@ -14,13 +14,6 @@
                     "type": "float",
                     "default": 3.14
                 },
-                "arrayMember": {
-                    "type": "array",
-                    "items": {
-                        "type": "link",
-                        "name": "SimpleClass"
-                    }
-                },
                 "linkArrayMember": {
                     "type": "array",
                     "items": {
@@ -41,6 +34,10 @@
                 "boolMember": {
                     "type": "bool",
                     "default": false
+                },
+                "intMember": {
+                    "type": "link",
+                    "name": "ExampleClass"
                 },
                 "extMember": {
                     "type": "link",

@@ -39,8 +39,7 @@ function ReadClass(fileName: string, name: string, data?: ClassType): any {
     }
     let clData = data !== undefined ? data : fileMap[fileId].data[name];
 
-    let classId = `${fileId}_${name}`;
-    if (classMap.hasOwnProperty(classId)) {
+    if (sources[fileId].hasClassMember(name)) {
         return;
     }
 
@@ -97,6 +96,7 @@ function ReadClass(fileName: string, name: string, data?: ClassType): any {
         }
     });
 
+    let classId = `${fileId}_${name}`;
     classMap[classId] = cl;
 }
 

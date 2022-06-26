@@ -1,10 +1,11 @@
-import { ISerializer, SerializerData } from "./ISerializer";
+import { ISerializer, SerializerData, SerializerDataArray } from "./ISerializer";
+import { GetRapidType, JsonLibrary } from "./SerializerTools";
 import { GetDate } from "./tools";
 import { ArrayType, ClassType, LinkType, SimpleType } from "./types";
 
 export class CppSerializer extends ISerializer {
-
     private includes: Array<string> = [];
+    protected lib: JsonLibrary = JsonLibrary.RapidJson;
 
     constructor(fileName: string, author: string, namespace?: string) {
         super(fileName, author, "cpp", namespace);
@@ -28,15 +29,58 @@ export class CppSerializer extends ISerializer {
     protected end() {
     }
 
-    addClassMember(name: string, member: ClassType) {
+    addClassMember(className: string, member: ClassType) {
+        this.classes[className] = new SerializerDataArray();
+        let cl = this.classes[className];
+
+        if (this.lib === JsonLibrary.RapidJson) {
+            // To JSON (PrettyWriter)
+            cl.createMember();
+            cl.addToHeader(0, `${this.indent}bool ${className}::to_json(rapidjson::PrettyWriter<rapidjson::StringBuffer> &writer) const {\n`);
+            cl.addToHeader(0, `${this.indent}\twriter.StartObject();\n\n`);
+            cl.addToFooter(0, `${this.indent}\twriter.EndObject();\n`);
+            cl.addToFooter(0, `${this.indent}\treturn true;\n`);
+            cl.addToFooter(0, `${this.indent}}\n\n`);
+
+            // To JSON (Writer)
+            cl.createMember();
+            cl.addToHeader(1, `${this.indent}bool ${className}::to_json(rapidjson::Writer<rapidjson::StringBuffer> &writer) const {\n`);
+            cl.addToHeader(1, `${this.indent}\twriter.StartObject();\n\n`);
+            cl.addToFooter(1, `${this.indent}\twriter.EndObject();\n`);
+            cl.addToFooter(1, `${this.indent}\treturn true;\n`);
+            cl.addToFooter(1, `${this.indent}}\n\n`);
+
+            // From JSON
+            cl.createMember();
+            cl.addToHeader(2, `${this.indent}bool ${className}::from_json(const rapidjson::Value &obj) {\n`);
+            cl.addToFooter(2, `${this.indent}\treturn true;\n`);
+            cl.addToFooter(2, `${this.indent}}\n\n`);
+        }
     }
 
     addSimpleMember(className: string, name: string, member: SimpleType) {
+        let cl = this.classes[className];
+        if (this.lib === JsonLibrary.RapidJson) {
+            // To JSON (PrettyWriter)
+            cl.addToContent(0, `${this.indent}\twriter.String("${name}");\n`)
+            cl.addToContent(0, `${this.indent}\twriter.${GetRapidType(member)[0]}(${name}${GetRapidType(member)[1]});\n\n`);
 
+            // To JSON (Writer)
+            cl.addToContent(1, `${this.indent}\twriter.String("${name}");\n`)
+            cl.addToContent(1, `${this.indent}\twriter.${GetRapidType(member)[0]}(${name}${GetRapidType(member)[1]});\n\n`);
+        }
     }
 
     addLinkMember(className: string, name: string, member: LinkType) {
-
+        let cl = this.classes[className];
+        if (this.lib === JsonLibrary.RapidJson) {
+            // To JSON (PrettyWriter)
+            cl.addToContent(0, `${this.indent}\twriter.String("${name}");\n`)
+            cl.addToContent(0, `${this.indent}\t${name}.to_json(writer);\n\n`);
+            // To JSON (Writer)
+            cl.addToContent(1, `${this.indent}\twriter.String("${name}");\n`)
+            cl.addToContent(1, `${this.indent}\t${name}.to_json(writer);\n\n`);
+        }
     }
 
     addArrayMember(className: string, name: string, member: ArrayType) {

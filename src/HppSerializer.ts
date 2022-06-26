@@ -1,11 +1,13 @@
-import { ISerializer, SerializerData } from "./ISerializer";
+import { ISerializer, SerializerData, SerializerDataArray } from "./ISerializer";
 import { ArrayType, ClassType, LinkType, SimpleType } from "./types";
 import { GetDate } from "./tools";
-import { GetCppType } from "./SerializerTools";
+import { GetCppType, JsonLibrary } from "./SerializerTools";
 import path from "path";
 
 export class HppSerializer extends ISerializer {
     protected deps = new Set<string>();
+
+    protected lib: JsonLibrary = JsonLibrary.RapidJson;
 
     constructor(fileName: string, author: string, namespace?: string) {
         super(fileName, author, "hpp", namespace);
@@ -39,39 +41,47 @@ export class HppSerializer extends ISerializer {
             tmp.header += `: public ${member.parent} `;
         }
         tmp.header += `{\n${this.indent}public:\n`;
-
+        if (this.lib === JsonLibrary.RapidJson) {
+            this.deps.add("<rapidjson/document.h>");
+            this.deps.add("<rapidjson/prettywriter.h>");
+            this.deps.add("<rapidjson/writer.h>");
+            tmp.content += `${this.indent}\tbool to_json(rapidjson::PrettyWriter<rapidjson::StringBuffer> &writer) const;\n`;
+            tmp.content += `${this.indent}\tbool to_json(rapidjson::Writer<rapidjson::StringBuffer> &writer) const;\n`;
+            tmp.content += `${this.indent}\tbool from_json(const rapidjson::Value &obj);\n\n`;
+        }
         tmp.footer = `${this.indent}}; // class ${name}\n\n`;
 
-        this.classes[name] = tmp;
+        this.classes[name] = new SerializerDataArray();
+        this.classes[name].addMember(tmp);
     }
 
     addSimpleMember(className: string, name: string, member: SimpleType) {
-        let tmp = this.classes[className];
-        tmp.content += `${this.indent}\t${GetCppType(member)} ${name}{`;
+        let tmp = `${this.indent}\t${GetCppType(member)} ${name}{`;
         if (member.default !== undefined) {
             if (member.type === "string") {
-                tmp.content += `\"${member.default}\"`;
+                tmp += `\"${member.default}\"`;
             } else {
-                tmp.content += `${member.default}`;
+                tmp += `${member.default}`;
             }
         }
-        tmp.content += `};\n`;
+        tmp += `};\n`;
         if (member.type === "string") {
             this.deps.add(`<string>`);
         }
+        this.classes[className].addToContent(0, tmp);
     }
 
     addLinkMember(className: string, name: string, member: LinkType) {
-        let tmp = this.classes[className];
-        tmp.content += `${this.indent}\t${GetCppType(member)} ${name}{};\n`;
+        let tmp = `${this.indent}\t${GetCppType(member)} ${name}{};\n`;
+        this.classes[className].addToContent(0, tmp);
         if (member.file !== undefined) {
             this.deps.add(`"${path.basename(member.file, path.extname(member.file))}.${this.extension}"`);
         }
     }
 
     addArrayMember(className: string, name: string, member: ArrayType) {
-        let tmp = this.classes[className];
-        tmp.content += `${this.indent}\tstd::vector<${GetCppType(member.items)}> ${name}{};\n`;
+        let tmp = `${this.indent}\tstd::vector<${GetCppType(member.items)}> ${name}{};\n`;
+        this.classes[className].addToContent(0, tmp);
         this.deps.add(`<vector>`);
     }
 
