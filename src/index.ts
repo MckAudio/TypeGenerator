@@ -1,11 +1,13 @@
 import path from 'path';
-import { Dictionary, ClassType, SimpleType, ArrayType, LinkType, FileStore, FileType } from "./types";
+import { Dictionary, ClassType, SimpleType, ArrayType, LinkType, FileStore, FileType, IsSimpleType } from "./types";
 import { ISerializer, SerializerMap } from './ISerializer';
 
 import fs from 'fs';
 import { CppSerializer } from './CppSerializer';
 import { HppSerializer } from './HppSerializer';
 import { TsSerializer } from './TsSerializer';
+
+import YAML from 'yaml';
 
 declare global {
     interface String {
@@ -17,7 +19,6 @@ String.prototype.isOneOf = function (this: string, keys: Array<string>): boolean
     return keys.findIndex((val) => val == this) >= 0;
 }
 
-let classMap: Dictionary<ClassType> = {};
 let fileMap: Dictionary<FileStore> = {};
 let sources: Dictionary<SerializerMap> = {};
 
@@ -42,45 +43,25 @@ function ReadClass(fileName: string, name: string, data?: ClassType): any {
     if (sources[fileId].hasClassMember(name)) {
         return;
     }
-
-    if (debug) {
-        Object.entries(clData.members).forEach(entry => {
-            console.log(`"${entry[0]}" is of type "${entry[1].type}"`);
-            if (entry[1].type == "array") {
-                let arr = entry[1] as ArrayType;
-                console.log(`\tArray members are of type "${arr.items.type}"`);
-                if (arr.items.type == "link") {
-                    console.log(`\t\tLink points to class "${(arr.items as LinkType).name}"`);
-                }
-            }
-        });
-    }
     
     sources[fileId].addClassMember(name, clData);
 
-    let cl = Copy(clData);
     Object.entries(clData.members).forEach(entry => {
         if (entry[1].type.isOneOf(simpleTypes)) {
             sources[fileId].addSimpleMember(name, entry[0], entry[1] as SimpleType);
-            let val = entry[1] as SimpleType;
-            cl.members[entry[0]] = Copy(val);
         } else if (entry[1].type == "array") {
             let arr = entry[1] as ArrayType;
             sources[fileId].addArrayMember(name, entry[0], entry[1] as ArrayType);
 
 
-            cl.members[entry[0]] = Copy(arr);
-            if (arr.items.type.isOneOf(simpleTypes)) {
+            if (IsSimpleType(arr.items)) {
                 let arrVal = arr.items as SimpleType;
-                (cl.members[entry[0]] as ArrayType).items = Copy(arrVal);
             } else if (arr.items.type == "link") {
                 let link = arr.items as LinkType;
                 let linkFileName = fileMap[fileId].path;
                 if (link.file !== undefined) {
                     linkFileName = path.join(path.dirname(fileMap[fileId].path), link.file);
                 }
-                let linkFileId = path.basename(linkFileName, path.extname(linkFileName));
-                let linkId = `${linkFileId}_${link.name}`;
                 ReadClass(linkFileName, link.name);
             }
         } else if (entry[1].type == "link") {
@@ -90,26 +71,32 @@ function ReadClass(fileName: string, name: string, data?: ClassType): any {
             if (link.file !== undefined) {
                 linkFileName = path.join(path.dirname(fileMap[fileId].path), link.file);
             }
-            let linkFileId = path.basename(linkFileName, path.extname(linkFileName));
-            let linkId = `${linkFileId}_${link.name}`;
             ReadClass(linkFileName, link.name);
         }
     });
-
-    let classId = `${fileId}_${name}`;
-    classMap[classId] = cl;
 }
 
 function ReadFile(file: string) {
-    console.log(`Parsing file '${file}'`);
     if (fs.existsSync(file) == false) {
         console.error(`File '${file}' does not exist.`);
         return;
     }
 
     let str = fs.readFileSync(file, { encoding: 'utf-8' });
+    let obj;
 
-    let obj = JSON.parse(str) as FileType;
+    switch (path.extname(file)) {
+        case ".json":
+            obj = JSON.parse(str) as FileType;
+            break;
+        case ".yaml":
+            obj = YAML.parse(str) as FileType;
+            break;
+        default:
+            return;
+    }
+    console.log(`Parsing file '${file}'`);
+
 
     let fileId = path.basename(file, path.extname(file));
     fileMap[fileId] = new FileStore();
@@ -164,8 +151,6 @@ function main(argc: number, argv: Array<any>) {
                 console.log(`Failed to parse file "${entry[0]}" in path "${entry[1].path}"`);
             }
         });
-
-        console.log(JSON.stringify(classMap, null, 4));
     }
 }
 

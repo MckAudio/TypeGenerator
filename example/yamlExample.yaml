@@ -1,0 +1,9 @@
+meta:
+  author: Matt McK
+classes:
+  newClass:
+    type: class
+    members:
+      intMember:
+        type: signed
+        default: -5
