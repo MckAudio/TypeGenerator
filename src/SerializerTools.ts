@@ -43,7 +43,7 @@ export function GetRapidType(jsonType: BaseType): [string, string] {
         case "signed":
             return ["Int", ""];
         case "unsigned":
-            return ["UInt", ""];
+            return ["Uint", ""];
         case "float":
             return ["Double", ""];
         case "string":
