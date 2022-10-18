@@ -1,14 +1,16 @@
 import { ISerializer, SerializerData, SerializerDataArray } from "./ISerializer";
-import { GetRapidType, JsonLibrary } from "./SerializerTools";
+import { GetCppType, GetRapidType, JsonLibrary } from "./SerializerTools";
 import { GetDate } from "./tools";
 import { ArrayType, ClassType, IsSimpleType, LinkType, SimpleType } from "./types";
 
 export class CppSerializer extends ISerializer {
     private includes: Array<string> = [];
-    protected lib: JsonLibrary = JsonLibrary.RapidJson;
 
-    constructor(fileName: string, author: string, namespace?: string) {
+    protected lib: JsonLibrary;
+
+    constructor(fileName: string, author: string, namespace?: string, lib: JsonLibrary = JsonLibrary.RapidJson) {
         super(fileName, author, "cpp", namespace);
+        this.lib = lib;
     }
 
     protected begin() {
@@ -50,6 +52,16 @@ export class CppSerializer extends ISerializer {
             cl.addToHeader(2, `${this.indent}bool ${className}::from_json(const rapidjson::Value &obj) {\n`);
             cl.addToFooter(2, `${this.indent}\treturn true;\n`);
             cl.addToFooter(2, `${this.indent}}\n\n`);
+        } else if (this.lib === JsonLibrary.Nlohmann) {
+            console.log(`Adding nlohmann functions`);
+            // To JSON
+            cl.createMember();
+            cl.addToHeader(0, `${this.indent}void to_json(nlohmann::json &j, const ${className} &c) {\n`);
+            cl.addToFooter(0, `${this.indent}}\n\n`);
+            // From JSON
+            cl.createMember();
+            cl.addToHeader(1, `${this.indent}void from_json(const nlohmann::json &j, ${className} &c) {\n`);
+            cl.addToFooter(1, `${this.indent}}\n\n`);
         }
     }
 
@@ -58,12 +70,17 @@ export class CppSerializer extends ISerializer {
         if (this.lib === JsonLibrary.RapidJson) {
             // To JSON
             for (let i = 0; i < 2; i++) {
-                cl.addToContent(i, `${this.indent}\twriter.String("${name}");\n`)
+                cl.addToContent(i, `${this.indent}\twriter.String("${name}");\n`);
                 cl.addToContent(i, `${this.indent}\twriter.${GetRapidType(member)[0]}(${name}${GetRapidType(member)[1]});\n\n`);
             }
 
             // From JSON
             cl.addToContent(2, `${this.indent}\t${name} = obj["${name}"].Get${GetRapidType(member)[0]}();\n\n`);
+        } else if (this.lib === JsonLibrary.Nlohmann) {
+            // To JSON
+            cl.addToContent(0, `${this.indent}\tj["${name}"] = c.${name};\n`);
+            // From JSON
+            cl.addToContent(1, `${this.indent}\tc.${name} = j.at("${name}").get<${GetCppType(member)}>();\n`);
         }
     }
 
@@ -78,6 +95,11 @@ export class CppSerializer extends ISerializer {
 
             // From JSON
             cl.addToContent(2, `${this.indent}\t${name}.from_json(obj["${name}"]);\n\n`);
+        } else if (this.lib === JsonLibrary.Nlohmann) {
+            // To JSON
+            cl.addToContent(0, `${this.indent}\tj["${name}"] = c.${name};\n`);
+            // From JSON
+            cl.addToContent(1, `${this.indent}\tc.${name} = j.at("${name}").get<${GetCppType(member)}>();\n`);
         }
     }
 
@@ -109,6 +131,11 @@ export class CppSerializer extends ISerializer {
                 cl.addToContent(2, `${this.indent}\t\t${name}.back().from_json(v);\n`);
             }
             cl.addToContent(2, `${this.indent}\t}\n\n`);
+        } else if (this.lib === JsonLibrary.Nlohmann) {
+            // To JSON
+            cl.addToContent(0, `${this.indent}\tj["${name}"] = c.${name};\n`);
+            // From JSON
+            cl.addToContent(1, `${this.indent}\tc.${name} = j.at("${name}").get<std::vector<${GetCppType(member.items)}>>();\n`);
         }
     }
 

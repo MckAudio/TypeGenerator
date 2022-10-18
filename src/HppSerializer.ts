@@ -7,10 +7,11 @@ import path from "path";
 export class HppSerializer extends ISerializer {
     protected deps = new Set<string>();
 
-    protected lib: JsonLibrary = JsonLibrary.RapidJson;
+    protected lib: JsonLibrary;
 
-    constructor(fileName: string, author: string, namespace?: string) {
+    constructor(fileName: string, author: string, namespace?: string, lib: JsonLibrary = JsonLibrary.RapidJson) {
         super(fileName, author, "hpp", namespace);
+        this.lib = lib;
     }
 
     protected begin() {
@@ -41,6 +42,8 @@ export class HppSerializer extends ISerializer {
             tmp.header += `: public ${member.parent} `;
         }
         tmp.header += `{\n${this.indent}public:\n`;
+        tmp.footer = `${this.indent}}; // class ${name}\n`;
+
         if (this.lib === JsonLibrary.RapidJson) {
             this.deps.add("<rapidjson/document.h>");
             this.deps.add("<rapidjson/prettywriter.h>");
@@ -48,8 +51,13 @@ export class HppSerializer extends ISerializer {
             tmp.content += `${this.indent}\tbool to_json(rapidjson::PrettyWriter<rapidjson::StringBuffer> &writer) const;\n`;
             tmp.content += `${this.indent}\tbool to_json(rapidjson::Writer<rapidjson::StringBuffer> &writer) const;\n`;
             tmp.content += `${this.indent}\tbool from_json(const rapidjson::Value &obj);\n\n`;
+        } else if (this.lib === JsonLibrary.Nlohmann) {
+            this.deps.add("<nlohmann/json.hpp>");
+            tmp.footer += `${this.indent}void to_json(nlohmann::json &j, const ${name} &c);\n`;
+            tmp.footer += `${this.indent}void from_json(const nlohmann::json &j, ${name} &c);\n`;
         }
-        tmp.footer = `${this.indent}}; // class ${name}\n\n`;
+
+        tmp.footer += `\n`;
 
         this.classes[name] = new SerializerDataArray();
         this.classes[name].addMember(tmp);

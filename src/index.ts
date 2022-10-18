@@ -8,6 +8,7 @@ import { HppSerializer } from './HppSerializer';
 import { TsSerializer } from './TsSerializer';
 
 import YAML from 'yaml';
+import { JsonLibrary } from './SerializerTools';
 
 declare global {
     interface String {
@@ -104,8 +105,8 @@ function ReadFile(file: string) {
     fileMap[fileId].data = obj.classes
 
     sources[fileId] = new SerializerMap();
-    sources[fileId].addSerializer(new CppSerializer(fileId, obj.meta.author, obj.meta.namespace));
-    sources[fileId].addSerializer(new HppSerializer(fileId, obj.meta.author, obj.meta.namespace));
+    sources[fileId].addSerializer(new CppSerializer(fileId, obj.meta.author, obj.meta.namespace, JsonLibrary.Nlohmann));
+    sources[fileId].addSerializer(new HppSerializer(fileId, obj.meta.author, obj.meta.namespace, JsonLibrary.Nlohmann));
     sources[fileId].addSerializer(new TsSerializer(fileId, obj.meta.author, obj.meta.namespace));
 
     Object.entries(fileMap[fileId].data).forEach(entry => {

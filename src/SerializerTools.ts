@@ -79,5 +79,6 @@ export function GetTsDefault(jsonType: BaseType): string {
 export enum JsonLibrary {
     None = 0,
     RapidJson,
-    JsonCPP
+    JsonCPP,
+    Nlohmann
 }
