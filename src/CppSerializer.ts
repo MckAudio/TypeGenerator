@@ -80,7 +80,24 @@ export class CppSerializer extends ISerializer {
             // To JSON
             cl.addToContent(0, `${this.indent}\tj["${name}"] = c.${name};\n`);
             // From JSON
-            cl.addToContent(1, `${this.indent}\tc.${name} = j.at("${name}").get<${GetCppType(member)}>();\n`);
+            if (member.newProperty === true) {
+                let tmp = `${GetCppType(member)}(`;
+                if (member.default !== undefined) {
+                    if (member.type === "string") {
+                        tmp += `\"${member.default}\"`;
+                    } else {
+                        tmp += `${member.default}`;
+                    }
+                }
+                tmp += `)`;
+                cl.addToContent(1, `${this.indent}\ttry {\n`);
+                cl.addToContent(1, `${this.indent}\t\tc.${name} = j.at("${name}").get<${GetCppType(member)}>();\n`);
+                cl.addToContent(1, `${this.indent}\t} catch(std::exception &e) {\n`);
+                cl.addToContent(1, `${this.indent}\t\tc.${name} = ${tmp};\n`);
+                cl.addToContent(1, `${this.indent}\t}\n`);
+            } else {
+                cl.addToContent(1, `${this.indent}\tc.${name} = j.at("${name}").get<${GetCppType(member)}>();\n`);
+            }
         }
     }
 
@@ -99,7 +116,15 @@ export class CppSerializer extends ISerializer {
             // To JSON
             cl.addToContent(0, `${this.indent}\tj["${name}"] = c.${name};\n`);
             // From JSON
-            cl.addToContent(1, `${this.indent}\tc.${name} = j.at("${name}").get<${GetCppType(member)}>();\n`);
+            if (member.newProperty === true) {
+                cl.addToContent(1, `${this.indent}\ttry {\n`);
+                cl.addToContent(1, `${this.indent}\t\tc.${name} = j.at("${name}").get<${GetCppType(member)}>();\n`);
+                cl.addToContent(1, `${this.indent}\t} catch(std::exception &e) {\n`);
+                cl.addToContent(1, `${this.indent}\t\tc.${name} = ${GetCppType(member)}();\n`);
+                cl.addToContent(1, `${this.indent}\t}\n`);
+            } else {
+                cl.addToContent(1, `${this.indent}\tc.${name} = j.at("${name}").get<${GetCppType(member)}>();\n`);
+            }
         }
     }
 
@@ -135,7 +160,15 @@ export class CppSerializer extends ISerializer {
             // To JSON
             cl.addToContent(0, `${this.indent}\tj["${name}"] = c.${name};\n`);
             // From JSON
-            cl.addToContent(1, `${this.indent}\tc.${name} = j.at("${name}").get<std::vector<${GetCppType(member.items)}>>();\n`);
+            if (member.newProperty === true) {
+                cl.addToContent(1, `${this.indent}\ttry {\n`);
+                cl.addToContent(1, `${this.indent}\t\tc.${name} = j.at("${name}").get<std::vector<${GetCppType(member.items)}>>();\n`);
+                cl.addToContent(1, `${this.indent}\t} catch(std::exception &e) {\n`);
+                cl.addToContent(1, `${this.indent}\t\tc.${name} = std::vector<${GetCppType(member)}>();\n`);
+                cl.addToContent(1, `${this.indent}\t}\n`);
+            } else {
+                cl.addToContent(1, `${this.indent}\tc.${name} = j.at("${name}").get<std::vector<${GetCppType(member.items)}>>();\n`);
+            }
         }
     }
 

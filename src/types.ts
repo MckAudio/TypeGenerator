@@ -14,6 +14,7 @@ export class FileType {
 
 export class BaseType {
     type: string = "base";
+    newProperty?: boolean;
 }
 
 export class ClassType extends BaseType {
