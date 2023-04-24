@@ -52,9 +52,6 @@ function ReadClass(fileName: string, name: string, data?: ClassType): any {
             sources[fileId].addSimpleMember(name, entry[0], entry[1] as SimpleType);
         } else if (entry[1].type == "array") {
             let arr = entry[1] as ArrayType;
-            sources[fileId].addArrayMember(name, entry[0], entry[1] as ArrayType);
-
-
             if (IsSimpleType(arr.items)) {
                 let arrVal = arr.items as SimpleType;
             } else if (arr.items.type == "link") {
@@ -65,9 +62,12 @@ function ReadClass(fileName: string, name: string, data?: ClassType): any {
                 }
                 ReadClass(linkFileName, link.name);
                 if (link.file !== undefined) {
-                    (arr.items as LinkType).namespace = fileMap[path.basename(linkFileName, path.extname(linkFileName))].namespace
+                    let ns = fileMap[path.basename(linkFileName, path.extname(linkFileName))].namespace;
+                    ((entry[1] as ArrayType).items as LinkType).namespace = ns;
                 }
             }
+            sources[fileId].addArrayMember(name, entry[0], entry[1] as ArrayType);
+
         } else if (entry[1].type == "link") {
             let link = entry[1] as LinkType;
             let linkFileName = fileMap[fileId].path;

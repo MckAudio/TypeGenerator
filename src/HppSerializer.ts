@@ -99,6 +99,10 @@ export class HppSerializer extends ISerializer {
         let tmp = `${this.indent}\tstd::vector<${GetCppNamespace(member.items as LinkType)}${GetCppType(member.items)}> ${name}{};\n`;
         this.classes[className].addToContent(0, tmp);
         this.deps.add(`<vector>`);
+        let mi = member.items as LinkType;
+        if (mi.file !== undefined) {
+            this.deps.add(`"${path.basename(mi.file, path.extname(mi.file))}.${this.extension}"`);
+        }
     }
 
 }
