@@ -1,5 +1,10 @@
 import { BaseType, LinkType } from "./types";
 
+export function GetCppNamespace(link: LinkType): string
+{
+    return link.namespace !== undefined && link.namespace.length > 0 ? link.namespace.join("::") + "::" : "";
+}
+
 export function GetCppType(jsonType: BaseType): string {
     switch (jsonType.type) {
         case "signed":
@@ -18,6 +23,11 @@ export function GetCppType(jsonType: BaseType): string {
         default:
             return "";
     }
+}
+
+export function GetTsNamespace(link: LinkType): string 
+{
+    return link.namespace !== undefined && link.namespace.length > 0 ? link.namespace.join(".") + "." : "";
 }
 
 export function GetTsType(jsonType: BaseType): string {
@@ -58,7 +68,7 @@ export function GetRapidType(jsonType: BaseType): [string, string] {
     }
 }
 
-export function GetTsDefault(jsonType: BaseType): string {
+export function GetTsDefault(jsonType: BaseType, namespace?: string): string {
     switch (jsonType.type) {
         case "signed":
         case "unsigned":
@@ -70,7 +80,7 @@ export function GetTsDefault(jsonType: BaseType): string {
         case "bool":
             return "false";
         case "link":
-            return `new ${(jsonType as LinkType).name}()`;
+            return namespace !== undefined ? `new ${namespace}.${(jsonType as LinkType).name}()` : `new ${(jsonType as LinkType).name}()`;
         default:
             return "";
     }

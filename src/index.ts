@@ -64,15 +64,21 @@ function ReadClass(fileName: string, name: string, data?: ClassType): any {
                     linkFileName = path.join(path.dirname(fileMap[fileId].path), link.file);
                 }
                 ReadClass(linkFileName, link.name);
+                if (link.file !== undefined) {
+                    (arr.items as LinkType).namespace = fileMap[path.basename(linkFileName, path.extname(linkFileName))].namespace
+                }
             }
         } else if (entry[1].type == "link") {
-            sources[fileId].addLinkMember(name, entry[0], entry[1] as LinkType);
             let link = entry[1] as LinkType;
             let linkFileName = fileMap[fileId].path;
             if (link.file !== undefined) {
                 linkFileName = path.join(path.dirname(fileMap[fileId].path), link.file);
             }
             ReadClass(linkFileName, link.name);
+            if (link.file !== undefined) {
+                (entry[1] as LinkType).namespace = fileMap[path.basename(linkFileName, path.extname(linkFileName))].namespace
+            }
+            sources[fileId].addLinkMember(name, entry[0], entry[1] as LinkType);
         }
     });
 }
@@ -103,6 +109,7 @@ function ReadFile(file: string) {
     fileMap[fileId] = new FileStore();
     fileMap[fileId].path = file;
     fileMap[fileId].data = obj.classes
+    fileMap[fileId].namespace = obj.meta.namespace;
 
     sources[fileId] = new SerializerMap();
     sources[fileId].addSerializer(new CppSerializer(fileId, obj.meta.author, obj.meta.namespace, JsonLibrary.Nlohmann));

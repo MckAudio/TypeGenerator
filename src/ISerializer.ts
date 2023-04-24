@@ -66,7 +66,7 @@ export abstract class ISerializer extends ISerializerFn {
     protected extension: string = "none";
 
     author: string;
-    namespaceName?: string;
+    namespaces: Array<string>;
     fileName: string;
     sortId: number = 0;
     private source: string = "";
@@ -75,12 +75,12 @@ export abstract class ISerializer extends ISerializerFn {
 
     protected indent: string = "";
 
-    protected constructor(fileName: string, author: string, extension: string, namespace?: string) {
+    protected constructor(fileName: string, author: string, extension: string, namespace?: Array<string>) {
         super();
         this.fileName = fileName;
         this.author = author;
         this.extension = extension;
-        this.namespaceName = namespace;
+        this.namespaces = namespace !== undefined ? namespace : [];
         this.begin();
     }
 
@@ -93,7 +93,7 @@ export abstract class ISerializer extends ISerializerFn {
     getOutput(): string {
         if (this.finished === false) {
             this.end();
-            this.store.content = "";
+            //this.store.content = "";
             Object.entries(this.classes).sort((a,b) => a[1].sortId - b[1].sortId).forEach(cl => {
                 this.store.content += cl[1].getOutput();
             });

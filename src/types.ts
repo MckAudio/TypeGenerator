@@ -4,7 +4,7 @@ export interface Dictionary<Type> {
 
 export class FileMeta {
     author: string = "";
-    namespace?: string;
+    namespace?: Array<string>;
 }
 
 export class FileType {
@@ -40,13 +40,14 @@ export class ArrayType extends BaseType {
 export class LinkType extends BaseType {
     type: "link" = "link";
     name: string = "";
-    namespace?: string;
+    namespace?: Array<string>;
     visibility?: "public" | "protected" | "private";
     file?: string;
 }
 
 
 export class FileStore {
+    namespace?: Array<string>;
     deps: Array<string> = [];
     path: string = "";
     parsed: boolean = false;

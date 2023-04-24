@@ -1,5 +1,5 @@
 import { ISerializer, SerializerData, SerializerDataArray } from "./ISerializer";
-import { GetCppType, GetRapidType, JsonLibrary } from "./SerializerTools";
+import { GetCppNamespace, GetCppType, GetRapidType, JsonLibrary } from "./SerializerTools";
 import { GetDate } from "./tools";
 import { ArrayType, ClassType, IsSimpleType, LinkType, SimpleType } from "./types";
 
@@ -8,7 +8,7 @@ export class CppSerializer extends ISerializer {
 
     protected lib: JsonLibrary;
 
-    constructor(fileName: string, author: string, namespace?: string, lib: JsonLibrary = JsonLibrary.RapidJson) {
+    constructor(fileName: string, author: string, namespace?: Array<string>, lib: JsonLibrary = JsonLibrary.RapidJson) {
         super(fileName, author, "cpp", namespace);
         this.lib = lib;
     }
@@ -20,11 +20,17 @@ export class CppSerializer extends ISerializer {
         this.store.header += ` * @date ${GetDate()}\n */\n\n`;
         this.store.header += `#include "${this.fileName}.hpp"\n\n`;
 
-        if (this.namespaceName !== undefined) {
-            this.indent = "\t";
-
-            this.store.content = `namespace ${this.namespaceName} {\n`;
-            this.store.footer = `} // namespace ${this.namespaceName}\n`;
+        let indent = "";
+        for (let i = 0; i < this.namespaces.length; i++)
+        {
+            this.store.header += `${indent}namespace ${this.namespaces[i]} {\n`;
+            indent += "\t";
+        }
+        this.indent = indent;
+        for (let i = this.namespaces.length; i > 0; i--)
+        {
+            indent = Array.from({length: i-1}, () => "\t").join("");
+            this.store.footer += `${indent}} // namespace ${this.namespaces[i-1]}\n`;
         }
     }
 
@@ -118,12 +124,12 @@ export class CppSerializer extends ISerializer {
             // From JSON
             if (member.newProperty === true) {
                 cl.addToContent(1, `${this.indent}\ttry {\n`);
-                cl.addToContent(1, `${this.indent}\t\tc.${name} = j.at("${name}").get<${GetCppType(member)}>();\n`);
+                cl.addToContent(1, `${this.indent}\t\tc.${name} = j.at("${name}").get<${GetCppNamespace(member)}${GetCppType(member)}>();\n`);
                 cl.addToContent(1, `${this.indent}\t} catch(std::exception &e) {\n`);
-                cl.addToContent(1, `${this.indent}\t\tc.${name} = ${GetCppType(member)}();\n`);
+                cl.addToContent(1, `${this.indent}\t\tc.${name} = ${GetCppNamespace(member)}${GetCppType(member)}();\n`);
                 cl.addToContent(1, `${this.indent}\t}\n`);
             } else {
-                cl.addToContent(1, `${this.indent}\tc.${name} = j.at("${name}").get<${GetCppType(member)}>();\n`);
+                cl.addToContent(1, `${this.indent}\tc.${name} = j.at("${name}").get<${GetCppNamespace(member)}${GetCppType(member)}>();\n`);
             }
         }
     }

@@ -1,7 +1,7 @@
 import { ISerializer, SerializerData, SerializerDataArray } from "./ISerializer";
 import { ArrayType, ClassType, LinkType, SimpleType } from "./types";
 import { GetDate } from "./tools";
-import { GetCppType, JsonLibrary } from "./SerializerTools";
+import { GetCppNamespace, GetCppType, JsonLibrary } from "./SerializerTools";
 import path from "path";
 
 export class HppSerializer extends ISerializer {
@@ -9,7 +9,7 @@ export class HppSerializer extends ISerializer {
 
     protected lib: JsonLibrary;
 
-    constructor(fileName: string, author: string, namespace?: string, lib: JsonLibrary = JsonLibrary.RapidJson) {
+    constructor(fileName: string, author: string, namespace?: Array<string>, lib: JsonLibrary = JsonLibrary.RapidJson) {
         super(fileName, author, "hpp", namespace);
         this.lib = lib;
     }
@@ -20,11 +20,19 @@ export class HppSerializer extends ISerializer {
         this.store.header += ` * @link https://github.com/MckAudio/TypeGenerator\n`;
         this.store.header += ` * @date ${GetDate()}\n */\n\n`;
         this.store.header += `#pragma once\n\n`;
+        this.store.content = "";
 
-        if (this.namespaceName !== undefined) {
-            this.indent = "\t";
-            this.store.content = `namespace ${this.namespaceName} {\n`;
-            this.store.footer = `} // namespace ${this.namespaceName}\n`;
+        let indent = "";
+        for (let i = 0; i < this.namespaces.length; i++)
+        {
+            this.store.content += `${indent}namespace ${this.namespaces[i]} {\n`;
+            indent += "\t";
+        }
+        this.indent = indent;
+        for (let i = this.namespaces.length; i > 0; i--)
+        {
+            indent = Array.from({length: i-1}, () => "\t").join("");
+            this.store.footer += `${indent}} // namespace ${this.namespaces[i-1]}\n`;
         }
     }
 
@@ -80,7 +88,7 @@ export class HppSerializer extends ISerializer {
     }
 
     addLinkMember(className: string, name: string, member: LinkType) {
-        let tmp = `${this.indent}\t${GetCppType(member)} ${name}{};\n`;
+        let tmp = `${this.indent}\t${GetCppNamespace(member)}${GetCppType(member)} ${name}{};\n`;
         this.classes[className].addToContent(0, tmp);
         if (member.file !== undefined) {
             this.deps.add(`"${path.basename(member.file, path.extname(member.file))}.${this.extension}"`);
@@ -88,7 +96,7 @@ export class HppSerializer extends ISerializer {
     }
 
     addArrayMember(className: string, name: string, member: ArrayType) {
-        let tmp = `${this.indent}\tstd::vector<${GetCppType(member.items)}> ${name}{};\n`;
+        let tmp = `${this.indent}\tstd::vector<${GetCppNamespace(member.items as LinkType)}${GetCppType(member.items)}> ${name}{};\n`;
         this.classes[className].addToContent(0, tmp);
         this.deps.add(`<vector>`);
     }
