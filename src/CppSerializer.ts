@@ -1,7 +1,7 @@
 import { ISerializer, SerializerData, SerializerDataArray } from "./ISerializer";
 import { GetCppNamespace, GetCppType, GetRapidType, JsonLibrary } from "./SerializerTools";
 import { GetDate } from "./tools";
-import { ArrayType, ClassType, IsSimpleType, LinkType, SimpleType } from "./types";
+import { ArrayType, ClassType, EnumDefinition, EnumType, IsSimpleType, LinkType, SimpleType } from "./types";
 
 export class CppSerializer extends ISerializer {
     private includes: Array<string> = [];
@@ -35,6 +35,10 @@ export class CppSerializer extends ISerializer {
     }
 
     protected end() {
+    }
+
+    addEnumDefinition(name: string, member: EnumDefinition): void {
+        
     }
 
     addClassMember(className: string, member: ClassType) {
@@ -178,4 +182,35 @@ export class CppSerializer extends ISerializer {
         }
     }
 
+    addEnumMember(className: string, name: string, member: EnumType): void {
+        let cl = this.classes[className];
+        if (this.lib === JsonLibrary.RapidJson) {
+            // To JSON
+            for (let i = 0; i < 2; i++) {
+                cl.addToContent(i, `${this.indent}\twriter.String("${name}");\n`);
+                cl.addToContent(i, `${this.indent}\twriter.${GetRapidType(member)[0]}(${name}${GetRapidType(member)[1]});\n\n`);
+            }
+
+            // From JSON
+            cl.addToContent(2, `${this.indent}\t${name} = obj["${name}"].Get${GetRapidType(member)[0]}();\n\n`);
+        } else if (this.lib === JsonLibrary.Nlohmann) {
+            // To JSON
+            cl.addToContent(0, `${this.indent}\tj["${name}"] = c.${name};\n`);
+            // From JSON
+            if (member.newProperty === true) {
+                let tmp = `${GetCppType(member)}(`;
+                if (member.default !== undefined) {
+                    tmp += `${GetCppType(member)}::${member.default}`;
+                }
+                tmp += `)`;
+                cl.addToContent(1, `${this.indent}\ttry {\n`);
+                cl.addToContent(1, `${this.indent}\t\tc.${name} = j.at("${name}").get<${GetCppType(member)}>();\n`);
+                cl.addToContent(1, `${this.indent}\t} catch(std::exception &e) {\n`);
+                cl.addToContent(1, `${this.indent}\t\tc.${name} = ${tmp};\n`);
+                cl.addToContent(1, `${this.indent}\t}\n`);
+            } else {
+                cl.addToContent(1, `${this.indent}\tc.${name} = j.at("${name}").get<${GetCppType(member)}>();\n`);
+            }
+        }
+    }
 }

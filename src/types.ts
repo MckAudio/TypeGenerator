@@ -9,6 +9,7 @@ export class FileMeta {
 
 export class FileType {
     meta = new FileMeta();
+    enums?: Dictionary<EnumDefinition>;
     classes: Dictionary<ClassType> = {};
 }
 
@@ -17,10 +18,14 @@ export class BaseType {
     newProperty?: boolean;
 }
 
+export class EnumDefinition {
+    items: Dictionary<number> = {};
+}
+
 export class ClassType extends BaseType {
     type: "class" | "struct" = "class";
     parent?: string;
-    members: Dictionary<SimpleType | LinkType | ArrayType> = {};
+    members: Dictionary<SimpleType | LinkType | ArrayType | EnumType> = {};
 }
 
 export class SimpleType extends BaseType {
@@ -45,6 +50,12 @@ export class LinkType extends BaseType {
     file?: string;
 }
 
+export class EnumType extends BaseType {
+    type: "enum" = "enum";
+    name: string = "";
+    default?: number;
+    visibility?: "public" | "protected" | "private";
+}
 
 export class FileStore {
     namespace?: Array<string>;
@@ -52,6 +63,7 @@ export class FileStore {
     path: string = "";
     parsed: boolean = false;
     data: Dictionary<ClassType> = {};
+    enums: Dictionary<EnumDefinition> = {};
     sources: Dictionary<string> = {
         cpp: "",
         hpp: "",

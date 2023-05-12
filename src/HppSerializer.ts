@@ -1,5 +1,5 @@
 import { ISerializer, SerializerData, SerializerDataArray } from "./ISerializer";
-import { ArrayType, ClassType, LinkType, SimpleType } from "./types";
+import { ArrayType, ClassType, EnumDefinition, EnumType, LinkType, SimpleType } from "./types";
 import { GetDate } from "./tools";
 import { GetCppNamespace, GetCppType, JsonLibrary } from "./SerializerTools";
 import path from "path";
@@ -41,6 +41,16 @@ export class HppSerializer extends ISerializer {
             this.store.header += `#include ${dep}\n`;
         });
         this.store.header += `\n`;
+    }
+
+    addEnumDefinition(name: string, member: EnumDefinition): void {
+        let tmp = new SerializerData();
+        tmp.header = `${this.indent}enum ${name} {\n`;
+        Object.entries(member.items).forEach(e => {
+            tmp.content += `${this.indent}\t${e[0]} = ${e[1]},\n`;
+        });
+        tmp.footer = `${this.indent}}; // enum ${name} \n\n`;
+        this.enums[name] = tmp;
     }
 
     addClassMember(name: string, member: ClassType) {
@@ -105,4 +115,12 @@ export class HppSerializer extends ISerializer {
         }
     }
 
+    addEnumMember(className: string, name: string, member: EnumType): void {
+        let tmp = `${this.indent}\t${GetCppType(member)} ${name}{`;
+        if (member.default !== undefined) {
+            tmp += `${GetCppType(member)}::${member.default}`;
+        }
+        tmp += `};\n`;
+        this.classes[className].addToContent(0, tmp);
+    }
 }

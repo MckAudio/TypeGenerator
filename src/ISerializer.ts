@@ -1,4 +1,4 @@
-import { ArrayType, ClassType, Dictionary, LinkType, SimpleType } from "./types";
+import { ArrayType, ClassType, Dictionary, EnumDefinition, EnumType, LinkType, SimpleType } from "./types";
 import path from "path";
 import fs from "fs";
 
@@ -50,6 +50,8 @@ export class SerializerDataArray {
 };
 
 abstract class ISerializerFn {
+    abstract addEnumDefinition(name: string, member: EnumDefinition): void;
+
     abstract addClassMember(name: string, member: ClassType): void;
 
     abstract addSimpleMember(className: string, name: string, member: SimpleType): void;
@@ -57,6 +59,8 @@ abstract class ISerializerFn {
     abstract addLinkMember(className: string, name: string, member: LinkType): void;
 
     abstract addArrayMember(className: string, name: string, member: ArrayType): void;
+
+    abstract addEnumMember(className: string, name: string, member: EnumType): void;
 
     abstract writeToFile(outDir: string): void;
 }
@@ -72,6 +76,7 @@ export abstract class ISerializer extends ISerializerFn {
     private source: string = "";
     private finished: boolean = false;
     protected classes: Dictionary<SerializerDataArray> = {};
+    protected enums: Dictionary<SerializerData> = {};
 
     protected indent: string = "";
 
@@ -94,6 +99,10 @@ export abstract class ISerializer extends ISerializerFn {
         if (this.finished === false) {
             this.end();
             //this.store.content = "";
+            Object.entries(this.enums).sort((a, b) => a[1].sortId - b[1].sortId).forEach(e => {
+                this.store.content += e[1].getOutput();
+            });
+
             Object.entries(this.classes).sort((a,b) => a[1].sortId - b[1].sortId).forEach(cl => {
                 this.store.content += cl[1].getOutput();
             });
@@ -115,10 +124,26 @@ export abstract class ISerializer extends ISerializerFn {
 
 export class SerializerMap extends ISerializerFn {
     private serializers: Array<ISerializer> = [];
-    private classes: Dictionary<Set<string>> = {};// = new Set<string>();
+    private classes: Dictionary<Set<string>> = {};
+    private enums: Dictionary<Set<string>> = {};
 
     addSerializer(serializer: ISerializer): void {
         this.serializers.push(serializer);
+    }
+
+    hasEnumDefinition(name: string): boolean {
+        return this.enums.hasOwnProperty(name);
+    }
+
+    addEnumDefinition(name: string, member: EnumDefinition): boolean {
+        if (this.enums.hasOwnProperty(name)) {
+            return false;
+        }
+        this.enums[name] = new Set<string>();
+        this.serializers.forEach(s => {
+            s.addEnumDefinition(name, member);
+        });
+        return true;
     }
 
     hasClassMember(name: string): boolean {
@@ -162,6 +187,16 @@ export class SerializerMap extends ISerializerFn {
         }
         this.serializers.forEach(s => {
             s.addArrayMember(className, name, member);
+        });
+        this.classes[className].add(name);
+    }
+
+    addEnumMember(className: string, name: string, member: EnumType): void {
+        if (this.classes[className].has(name)) {
+            return;
+        }
+        this.serializers.forEach(s => {
+            s.addEnumMember(className, name, member);
         });
         this.classes[className].add(name);
     }

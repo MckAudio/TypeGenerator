@@ -1,7 +1,7 @@
 import { ISerializer, SerializerData, SerializerDataArray } from "./ISerializer";
 import { GetTsDefault, GetTsType } from "./SerializerTools";
 import { GetDate } from "./tools";
-import { ArrayType, ClassType, Dictionary, LinkType, SimpleType } from "./types";
+import { ArrayType, ClassType, Dictionary, EnumDefinition, EnumType, LinkType, SimpleType } from "./types";
 import path from "path";
 
 export class TsSerializer extends ISerializer {
@@ -29,6 +29,18 @@ export class TsSerializer extends ISerializer {
             this.store.header += `import * as ${dep} from \"./${dep}\";\n`;
         });
         this.store.header += `\n`;
+    }
+
+    addEnumDefinition(name: string, member: EnumDefinition): void {
+        let tmp = new SerializerData();
+        tmp.sortId = this.sortId++;
+        tmp.header = `${this.indent}export enum ${name} {\n`;
+        Object.entries(member.items).forEach(e => {
+            tmp.content += `${this.indent}\t${e[0]} = ${e[1]},\n`;
+        })
+        tmp.footer = `${this.indent}}\n\n`;
+
+        this.enums[name] = tmp;
     }
 
     addClassMember(name: string, member: ClassType) {
@@ -81,6 +93,11 @@ export class TsSerializer extends ISerializer {
                 this.deps.add(`${bn}`);
             }
         }
+        this.classes[className].addToContent(0, tmp);
+    }
+
+    addEnumMember(className: string, name: string, member: EnumType): void {
+        let tmp = `${this.indent}\t${name}: ${GetTsType(member)} = ${GetTsDefault(member)};\n`;
         this.classes[className].addToContent(0, tmp);
     }
 }

@@ -1,7 +1,6 @@
-import { BaseType, LinkType } from "./types";
+import { BaseType, EnumType, LinkType } from "./types";
 
-export function GetCppNamespace(link: LinkType): string
-{
+export function GetCppNamespace(link: LinkType): string {
     return link.namespace !== undefined && link.namespace.length > 0 ? link.namespace.join("::") + "::" : "";
 }
 
@@ -20,13 +19,14 @@ export function GetCppType(jsonType: BaseType): string {
             return "bool";
         case "link":
             return (jsonType as LinkType).name;
+        case "enum":
+            return (jsonType as EnumType).name;
         default:
             return "";
     }
 }
 
-export function GetTsNamespace(link: LinkType): string 
-{
+export function GetTsNamespace(link: LinkType): string {
     return link.namespace !== undefined && link.namespace.length > 0 ? link.namespace.join(".") + "." : "";
 }
 
@@ -43,6 +43,8 @@ export function GetTsType(jsonType: BaseType): string {
             return "boolean";
         case "link":
             return (jsonType as LinkType).name;
+        case "enum":
+            return (jsonType as EnumType).name;
         default:
             return "";
     }
@@ -63,6 +65,8 @@ export function GetRapidType(jsonType: BaseType): [string, string] {
             return ["Bool", ""];
         case "link":
             return [(jsonType as LinkType).name, ""];
+        case "enum":
+            return [(jsonType as EnumType).name, ""];
         default:
             return ["", ""];
     }
@@ -81,6 +85,8 @@ export function GetTsDefault(jsonType: BaseType, namespace?: string): string {
             return "false";
         case "link":
             return namespace !== undefined ? `new ${namespace}.${(jsonType as LinkType).name}()` : `new ${(jsonType as LinkType).name}()`;
+        case "enum":
+            return (jsonType as EnumType).default !== undefined ? `${GetTsType(jsonType)}.${(jsonType as EnumType).default}` : "0";
         default:
             return "";
     }

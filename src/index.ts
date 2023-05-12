@@ -1,5 +1,5 @@
 import path from 'path';
-import { Dictionary, ClassType, SimpleType, ArrayType, LinkType, FileStore, FileType, IsSimpleType } from "./types";
+import { Dictionary, ClassType, SimpleType, ArrayType, LinkType, FileStore, FileType, IsSimpleType, EnumType, EnumDefinition } from "./types";
 import { ISerializer, SerializerMap } from './ISerializer';
 
 import fs from 'fs';
@@ -31,6 +31,16 @@ function Copy<T>(data: T): T {
     return JSON.parse(JSON.stringify(data)) as T;
 }
 
+function ReadEnum(fileName: string, name: string, data: EnumDefinition): any {
+    let fileId = path.basename(fileName, path.extname(fileName));
+
+    if (sources[fileId].hasEnumDefinition(name)) {
+        return;
+    }
+    
+    sources[fileId].addEnumDefinition(name, data);
+}
+
 function ReadClass(fileName: string, name: string, data?: ClassType): any {
     let fileId = path.basename(fileName, path.extname(fileName));
 
@@ -50,7 +60,7 @@ function ReadClass(fileName: string, name: string, data?: ClassType): any {
     Object.entries(clData.members).forEach(entry => {
         if (entry[1].type.isOneOf(simpleTypes)) {
             sources[fileId].addSimpleMember(name, entry[0], entry[1] as SimpleType);
-        } else if (entry[1].type == "array") {
+        } else if (entry[1].type === "array") {
             let arr = entry[1] as ArrayType;
             if (IsSimpleType(arr.items)) {
                 let arrVal = arr.items as SimpleType;
@@ -68,7 +78,7 @@ function ReadClass(fileName: string, name: string, data?: ClassType): any {
             }
             sources[fileId].addArrayMember(name, entry[0], entry[1] as ArrayType);
 
-        } else if (entry[1].type == "link") {
+        } else if (entry[1].type === "link") {
             let link = entry[1] as LinkType;
             let linkFileName = fileMap[fileId].path;
             if (link.file !== undefined) {
@@ -79,6 +89,8 @@ function ReadClass(fileName: string, name: string, data?: ClassType): any {
                 (entry[1] as LinkType).namespace = fileMap[path.basename(linkFileName, path.extname(linkFileName))].namespace
             }
             sources[fileId].addLinkMember(name, entry[0], entry[1] as LinkType);
+        } else if (entry[1].type === "enum") {
+            sources[fileId].addEnumMember(name, entry[0], entry[1] as EnumType);
         }
     });
 }
@@ -109,12 +121,17 @@ function ReadFile(file: string) {
     fileMap[fileId] = new FileStore();
     fileMap[fileId].path = file;
     fileMap[fileId].data = obj.classes
+    fileMap[fileId].enums = obj.enums !== undefined ? obj.enums : {};
     fileMap[fileId].namespace = obj.meta.namespace;
 
     sources[fileId] = new SerializerMap();
     sources[fileId].addSerializer(new CppSerializer(fileId, obj.meta.author, obj.meta.namespace, JsonLibrary.Nlohmann));
     sources[fileId].addSerializer(new HppSerializer(fileId, obj.meta.author, obj.meta.namespace, JsonLibrary.Nlohmann));
     sources[fileId].addSerializer(new TsSerializer(fileId, obj.meta.author, obj.meta.namespace));
+
+    Object.entries(fileMap[fileId].enums).forEach(entry => {
+        ReadEnum(file, entry[0], entry[1]);
+    })
 
     Object.entries(fileMap[fileId].data).forEach(entry => {
         ReadClass(file, entry[0], entry[1]);
