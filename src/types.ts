@@ -29,7 +29,7 @@ export class ClassType extends BaseType {
 }
 
 export class SimpleType extends BaseType {
-    type: "signed" | "unsigned" | "float" | "string" | "bool" | "boolean" = "bool";
+    type: "signed" | "unsigned" | "float" | "string" | "bool" | "boolean" | "byte" = "bool";
     visibility?: "public" | "protected" | "private";
     minimum?: number;
     maximum?: number;
@@ -71,7 +71,6 @@ export class FileStore {
     }
 }
 
-export function IsSimpleType(type: BaseType)
-{
+export function IsSimpleType(type: BaseType) {
     return ["signed", "unsigned", "float", "string", "bool", "boolean"].findIndex(s => s === type.type) >= 0;
 }

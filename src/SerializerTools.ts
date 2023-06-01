@@ -8,6 +8,8 @@ export function GetCppType(jsonType: BaseType): string {
     switch (jsonType.type) {
         case "signed":
             return "int";
+        case "byte":
+            return "unsigned char";
         case "unsigned":
             return "unsigned";
         case "float":
@@ -35,6 +37,7 @@ export function GetTsType(jsonType: BaseType): string {
         case "signed":
         case "unsigned":
         case "float":
+        case "byte":
             return "number";
         case "string":
             return "string";
@@ -55,6 +58,7 @@ export function GetRapidType(jsonType: BaseType): [string, string] {
         case "signed":
             return ["Int", ""];
         case "unsigned":
+        case "byte":
             return ["Uint", ""];
         case "float":
             return ["Double", ""];
@@ -77,6 +81,7 @@ export function GetTsDefault(jsonType: BaseType, namespace?: string): string {
         case "signed":
         case "unsigned":
         case "float":
+        case "byte":
             return "0";
         case "string":
             return "\"\"";
