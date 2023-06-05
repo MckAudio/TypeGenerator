@@ -53,7 +53,12 @@ export class TsSerializer extends ISerializer {
         }
         tmp.header += `{\n`;
 
-        tmp.footer = `${this.indent}}\n\n`;
+        tmp.footer = `${this.indent}\tconstructor() {\n`;
+        if (member.parent !== undefined) {
+            tmp.footer += `${this.indent}\t\tsuper();\n`;
+        }
+        tmp.footer += `${this.indent}\t}\n`;
+        tmp.footer += `${this.indent}}\n\n`;
 
         this.classes[name] = new SerializerDataArray();
         this.classes[name].addMember(tmp);

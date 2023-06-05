@@ -68,10 +68,16 @@ export class CppSerializer extends ISerializer {
             // To JSON
             cl.createMember();
             cl.addToHeader(0, `${this.indent}void to_json(nlohmann::json &j, const ${className} &c) {\n`);
+            if (member.parent !== undefined) {
+                cl.addToHeader(0, `${this.indent}\tto_json(j, static_cast<${member.parent}>(c));\n`);
+            }
             cl.addToFooter(0, `${this.indent}}\n\n`);
             // From JSON
             cl.createMember();
             cl.addToHeader(1, `${this.indent}void from_json(const nlohmann::json &j, ${className} &c) {\n`);
+            if (member.parent !== undefined) {
+                cl.addToHeader(1, `${this.indent}\tfrom_json(j, static_cast<${member.parent}>(c));\n`);
+            }
             cl.addToFooter(1, `${this.indent}}\n\n`);
         }
     }
