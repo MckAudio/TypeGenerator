@@ -181,7 +181,7 @@ export class CppSerializer extends ISerializer {
                 cl.addToContent(1, `${this.indent}\ttry {\n`);
                 cl.addToContent(1, `${this.indent}\t\tc.${name} = j.at("${name}").get<std::vector<${GetCppNamespace(member.items as LinkType)}${GetCppType(member.items)}>>();\n`);
                 cl.addToContent(1, `${this.indent}\t} catch(std::exception &e) {\n`);
-                cl.addToContent(1, `${this.indent}\t\tc.${name} = std::vector<${GetCppNamespace(member.items as LinkType)}${GetCppType(member)}>();\n`);
+                cl.addToContent(1, `${this.indent}\t\tc.${name} = std::vector<${GetCppNamespace(member.items as LinkType)}${GetCppType(member.items)}>();\n`);
                 cl.addToContent(1, `${this.indent}\t}\n`);
             } else {
                 cl.addToContent(1, `${this.indent}\tc.${name} = j.at("${name}").get<std::vector<${GetCppNamespace(member.items as LinkType)}${GetCppType(member.items)}>>();\n`);
