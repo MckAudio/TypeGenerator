@@ -22,16 +22,14 @@ export class CppSerializer extends ISerializer {
         this.store.header += `#include "${this.fileName}.hpp"\n\n`;
 
         let indent = "";
-        for (let i = 0; i < this.namespaces.length; i++)
-        {
+        for (let i = 0; i < this.namespaces.length; i++) {
             this.store.header += `${indent}namespace ${this.namespaces[i]} {\n`;
             indent += "\t";
         }
         this.indent = indent;
-        for (let i = this.namespaces.length; i > 0; i--)
-        {
-            indent = Array.from({length: i-1}, () => "\t").join("");
-            this.store.footer += `${indent}} // namespace ${this.namespaces[i-1]}\n`;
+        for (let i = this.namespaces.length; i > 0; i--) {
+            indent = Array.from({ length: i - 1 }, () => "\t").join("");
+            this.store.footer += `${indent}} // namespace ${this.namespaces[i - 1]}\n`;
         }
     }
 
@@ -39,7 +37,7 @@ export class CppSerializer extends ISerializer {
     }
 
     addEnumDefinition(name: string, member: EnumDefinition): void {
-        
+
     }
 
     addClassMember(className: string, member: ClassType) {
@@ -177,14 +175,15 @@ export class CppSerializer extends ISerializer {
             // To JSON
             cl.addToContent(0, `${this.indent}\tj["${name}"] = c.${name};\n`);
             // From JSON
+            let type = member.items.type === "array" ? `std::vector<${GetCppNamespace(member.items.items as LinkType)}${GetCppType(member.items.items)}>` : `${GetCppNamespace(member.items as LinkType)}${GetCppType(member.items)}`;
             if (member.newProperty === true) {
                 cl.addToContent(1, `${this.indent}\ttry {\n`);
-                cl.addToContent(1, `${this.indent}\t\tc.${name} = j.at("${name}").get<std::vector<${GetCppNamespace(member.items as LinkType)}${GetCppType(member.items)}>>();\n`);
+                cl.addToContent(1, `${this.indent}\t\tc.${name} = j.at("${name}").get<std::vector<${type}>>();\n`);
                 cl.addToContent(1, `${this.indent}\t} catch(std::exception &e) {\n`);
-                cl.addToContent(1, `${this.indent}\t\tc.${name} = std::vector<${GetCppNamespace(member.items as LinkType)}${GetCppType(member.items)}>();\n`);
+                cl.addToContent(1, `${this.indent}\t\tc.${name} = std::vector<${type}>();\n`);
                 cl.addToContent(1, `${this.indent}\t}\n`);
             } else {
-                cl.addToContent(1, `${this.indent}\tc.${name} = j.at("${name}").get<std::vector<${GetCppNamespace(member.items as LinkType)}${GetCppType(member.items)}>>();\n`);
+                cl.addToContent(1, `${this.indent}\tc.${name} = j.at("${name}").get<std::vector<${type}>>();\n`);
             }
         }
     }

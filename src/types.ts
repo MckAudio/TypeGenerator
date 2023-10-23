@@ -39,7 +39,7 @@ export class SimpleType extends BaseType {
 export class ArrayType extends BaseType {
     type: "array" = "array";
     visibility?: "public" | "protected" | "private";
-    items: SimpleType | LinkType = new SimpleType();
+    items: SimpleType | LinkType | ArrayType = new SimpleType();
 }
 
 export class LinkType extends BaseType {

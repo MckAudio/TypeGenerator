@@ -37,7 +37,7 @@ function ReadEnum(fileName: string, name: string, data: EnumDefinition): any {
     if (sources[fileId].hasEnumDefinition(name)) {
         return;
     }
-    
+
     sources[fileId].addEnumDefinition(name, data);
 }
 
@@ -54,7 +54,7 @@ function ReadClass(fileName: string, name: string, data?: ClassType): any {
     if (sources[fileId].hasClassMember(name)) {
         return;
     }
-    
+
     sources[fileId].addClassMember(name, clData);
 
     Object.entries(clData.members).forEach(entry => {
@@ -75,6 +75,8 @@ function ReadClass(fileName: string, name: string, data?: ClassType): any {
                     let ns = fileMap[path.basename(linkFileName, path.extname(linkFileName))].namespace;
                     ((entry[1] as ArrayType).items as LinkType).namespace = ns;
                 }
+            } else if (arr.items.type == "array") {
+                let arrVal = arr.items as ArrayType;
             }
             sources[fileId].addArrayMember(name, entry[0], entry[1] as ArrayType);
 

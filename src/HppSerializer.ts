@@ -24,16 +24,14 @@ export class HppSerializer extends ISerializer {
         this.store.content = "";
 
         let indent = "";
-        for (let i = 0; i < this.namespaces.length; i++)
-        {
+        for (let i = 0; i < this.namespaces.length; i++) {
             this.store.content += `${indent}namespace ${this.namespaces[i]} {\n`;
             indent += "\t";
         }
         this.indent = indent;
-        for (let i = this.namespaces.length; i > 0; i--)
-        {
-            indent = Array.from({length: i-1}, () => "\t").join("");
-            this.store.footer += `${indent}} // namespace ${this.namespaces[i-1]}\n`;
+        for (let i = this.namespaces.length; i > 0; i--) {
+            indent = Array.from({ length: i - 1 }, () => "\t").join("");
+            this.store.footer += `${indent}} // namespace ${this.namespaces[i - 1]}\n`;
         }
     }
 
@@ -107,7 +105,8 @@ export class HppSerializer extends ISerializer {
     }
 
     addArrayMember(className: string, name: string, member: ArrayType) {
-        let tmp = `${this.indent}\tstd::vector<${GetCppNamespace(member.items as LinkType)}${GetCppType(member.items)}> ${name}{};\n`;
+        let type = member.items.type === "array" ? `std::vector<${GetCppNamespace(member.items.items as LinkType)}${GetCppType(member.items.items)}>` : `${GetCppNamespace(member.items as LinkType)}${GetCppType(member.items)}`;
+        let tmp = `${this.indent}\tstd::vector<${type}> ${name}{};\n`;
         this.classes[className].addToContent(0, tmp);
         this.deps.add(`<vector>`);
         let mi = member.items as LinkType;

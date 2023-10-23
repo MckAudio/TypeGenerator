@@ -16,7 +16,7 @@ export class TsSerializer extends ISerializer {
         this.store.header += ` * @link https://github.com/MckAudio/TypeGenerator\n`;
         //this.store.header += ` * @date ${GetDate()}\n */\n\n`;
         this.store.header += ` */\n\n`;
-        
+
         /*
         if (this.namespaces.length > 0) {
             this.store.content = `export namespace ${this.namespaces.join('.')} {\n`;
@@ -90,16 +90,31 @@ export class TsSerializer extends ISerializer {
     }
 
     addArrayMember(className: string, name: string, member: ArrayType) {
-        let tmp = `${this.indent}\t${name}: Array<${GetTsType(member.items)}> = [];\n`;
-        if (member.items.hasOwnProperty('file')) {
-            let file = (member.items as LinkType).file;
-            if (file !== undefined) {
-                let bn = path.basename(file, path.extname(file));
-                tmp = `${this.indent}\t${name}: Array<${bn}.${GetTsType(member.items)}> = [];\n`;
-                this.deps.add(`${bn}`);
+        if (member.items.type === "array") {
+            let type = GetTsType(member.items.items);
+            let tmp = `${this.indent}\t${name}: Array<Array<${type}>> = [];\n`;
+            if (member.items.items.hasOwnProperty('file')) {
+                let file = (member.items.items as LinkType).file;
+                if (file !== undefined) {
+                    let bn = path.basename(file, path.extname(file));
+                    tmp = `${this.indent}\t${name}: Array<Array<${bn}.${GetTsType(member.items)}>> = [];\n`;
+                    this.deps.add(`${bn}`);
+                }
             }
+            this.classes[className].addToContent(0, tmp);
+        } else {
+            let type = GetTsType(member.items);
+            let tmp = `${this.indent}\t${name}: Array<${type}> = [];\n`;
+            if (member.items.hasOwnProperty('file')) {
+                let file = (member.items as LinkType).file;
+                if (file !== undefined) {
+                    let bn = path.basename(file, path.extname(file));
+                    tmp = `${this.indent}\t${name}: Array<${bn}.${type}> = [];\n`;
+                    this.deps.add(`${bn}`);
+                }
+            }
+            this.classes[className].addToContent(0, tmp);
         }
-        this.classes[className].addToContent(0, tmp);
     }
 
     addEnumMember(className: string, name: string, member: EnumType): void {
