@@ -107,7 +107,7 @@ export class CppSerializer extends ISerializer {
                 tmp += `)`;
                 cl.addToContent(1, `${this.indent}\ttry {\n`);
                 cl.addToContent(1, `${this.indent}\t\tc.${name} = j.at("${name}").get<${GetCppType(member)}>();\n`);
-                cl.addToContent(1, `${this.indent}\t} catch(std::exception &e) {\n`);
+                cl.addToContent(1, `${this.indent}\t} catch(...) {\n`);
                 cl.addToContent(1, `${this.indent}\t\tc.${name} = ${tmp};\n`);
                 cl.addToContent(1, `${this.indent}\t}\n`);
             } else {
@@ -134,7 +134,7 @@ export class CppSerializer extends ISerializer {
             if (member.newProperty === true) {
                 cl.addToContent(1, `${this.indent}\ttry {\n`);
                 cl.addToContent(1, `${this.indent}\t\tc.${name} = j.at("${name}").get<${GetCppNamespace(member)}${GetCppType(member)}>();\n`);
-                cl.addToContent(1, `${this.indent}\t} catch(std::exception &e) {\n`);
+                cl.addToContent(1, `${this.indent}\t} catch(...) {\n`);
                 cl.addToContent(1, `${this.indent}\t\tc.${name} = ${GetCppNamespace(member)}${GetCppType(member)}();\n`);
                 cl.addToContent(1, `${this.indent}\t}\n`);
             } else {
@@ -179,7 +179,7 @@ export class CppSerializer extends ISerializer {
             if (member.newProperty === true) {
                 cl.addToContent(1, `${this.indent}\ttry {\n`);
                 cl.addToContent(1, `${this.indent}\t\tc.${name} = j.at("${name}").get<std::vector<${type}>>();\n`);
-                cl.addToContent(1, `${this.indent}\t} catch(std::exception &e) {\n`);
+                cl.addToContent(1, `${this.indent}\t} catch(...) {\n`);
                 cl.addToContent(1, `${this.indent}\t\tc.${name} = std::vector<${type}>();\n`);
                 cl.addToContent(1, `${this.indent}\t}\n`);
             } else {
@@ -211,7 +211,7 @@ export class CppSerializer extends ISerializer {
                 tmp += `)`;
                 cl.addToContent(1, `${this.indent}\ttry {\n`);
                 cl.addToContent(1, `${this.indent}\t\tc.${name} = j.at("${name}").get<${GetCppType(member)}>();\n`);
-                cl.addToContent(1, `${this.indent}\t} catch(std::exception &e) {\n`);
+                cl.addToContent(1, `${this.indent}\t} catch(...) {\n`);
                 cl.addToContent(1, `${this.indent}\t\tc.${name} = ${tmp};\n`);
                 cl.addToContent(1, `${this.indent}\t}\n`);
             } else {
