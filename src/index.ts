@@ -23,7 +23,7 @@ String.prototype.isOneOf = function (this: string, keys: Array<string>): boolean
 let fileMap: Dictionary<FileStore> = {};
 let sources: Dictionary<SerializerMap> = {};
 
-const simpleTypes = ["signed", "unsigned", "float", "string", "bool", "boolean"];
+const simpleTypes = ["signed", "unsigned", "float", "float32", "double", "float64", "string", "bool", "boolean"];
 
 function Copy<T>(data: T): T {
     return JSON.parse(JSON.stringify(data)) as T;
