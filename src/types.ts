@@ -28,8 +28,16 @@ export class ClassType extends BaseType {
     members: Dictionary<SimpleType | LinkType | ArrayType | EnumType> = {};
 }
 
+export type T_FloatSignature = "float" | "double" | "float32" | "float64" | "f32" | "f64";
+export type T_IntSignature = "signed" | "unsigned" | "char" | "byte" | "i32" | "u32" | "i64" | "u64" | "i8" | "u8";
+export type T_BoolSignature = "bool" | "boolean";
+export type T_StringSignature = "string";
+export type T_SimpleSignature = T_FloatSignature | T_IntSignature | T_BoolSignature | T_StringSignature;
+
+export const simpleTypeNames = ["float", "double", "float32", "float64", "f32", "f64", "signed", "unsigned", "char", "byte", "i32", "u32", "i64", "u64", "i8", "u8", "bool", "boolean", "string"];
+
 export class SimpleType extends BaseType {
-    type: "signed" | "unsigned" | "float" | "float32" | "double" | "float64" | "string" | "bool" | "boolean" | "byte" = "bool";
+    type: T_SimpleSignature = "bool";
     visibility?: "public" | "protected" | "private";
     minimum?: number;
     maximum?: number;
@@ -72,5 +80,5 @@ export class FileStore {
 }
 
 export function IsSimpleType(type: BaseType) {
-    return ["signed", "unsigned", "float", "float32", "double", "float64", "string", "bool", "boolean"].findIndex(s => s === type.type) >= 0;
+    return simpleTypeNames.findIndex(s => s === type.type) >= 0;
 }

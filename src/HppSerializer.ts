@@ -12,6 +12,7 @@ export class HppSerializer extends ISerializer {
     constructor(fileName: string, author: string, namespace?: Array<string>, lib: JsonLibrary = JsonLibrary.RapidJson) {
         super(fileName, author, "hpp", namespace);
         this.lib = lib;
+        this.deps.add("<cstdint>")
     }
 
     protected begin() {

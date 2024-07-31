@@ -23,8 +23,6 @@ String.prototype.isOneOf = function (this: string, keys: Array<string>): boolean
 let fileMap: Dictionary<FileStore> = {};
 let sources: Dictionary<SerializerMap> = {};
 
-const simpleTypes = ["signed", "unsigned", "float", "float32", "double", "float64", "string", "bool", "boolean"];
-
 function Copy<T>(data: T): T {
     return JSON.parse(JSON.stringify(data)) as T;
 }
@@ -56,7 +54,7 @@ function ReadClass(fileName: string, name: string, data?: ClassType): any {
     sources[fileId].addClassMember(name, clData);
 
     Object.entries(clData.members).forEach(entry => {
-        if (entry[1].type.isOneOf(simpleTypes)) {
+        if (IsSimpleType(entry[1])) {
             sources[fileId].addSimpleMember(name, entry[0], entry[1] as SimpleType);
         } else if (entry[1].type === "array") {
             let arr = entry[1] as ArrayType;
