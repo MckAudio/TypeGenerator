@@ -112,7 +112,6 @@ function ReadFile(file: string) {
         default:
             return;
     }
-    console.log(`Parsing file '${file}'`);
 
 
     let fileId = path.basename(file, path.extname(file));
@@ -153,7 +152,7 @@ function WriteJsonFile(file: string) {
         fo.meta.author = "TypeGenerator";
         fo.meta.namespace = fd.namespace;
         fo.enums = fd.enums;
-        
+
         Object.entries(fd.data).forEach(cIn => {
             let cOut = new ClassType();
             cOut.newProperty = cIn[1].newProperty;
@@ -174,7 +173,7 @@ function WriteJsonFile(file: string) {
                         // Add all members of linked file with prefix to our file
                         if (fo.classes.hasOwnProperty(newLinkName) === false) {
                             let fl = fileMap[linkKey];
-                            Object.entries(fl.enums).forEach(fle => (fo.enums as Dictionary<EnumDefinition>)[fle[0]] = fle[1] );
+                            Object.entries(fl.enums).forEach(fle => (fo.enums as Dictionary<EnumDefinition>)[fle[0]] = fle[1]);
                             Object.entries(fl.data).forEach(flc => {
                                 let cn = `${linkKey}_${flc[0]}`;
                                 fo.classes[cn] = Copy(flc[1]);

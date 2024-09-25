@@ -62,7 +62,6 @@ export class CppSerializer extends ISerializer {
             cl.addToFooter(2, `${this.indent}\treturn true;\n`);
             cl.addToFooter(2, `${this.indent}}\n\n`);
         } else if (this.lib === JsonLibrary.Nlohmann) {
-            console.log(`Adding nlohmann functions`);
             // To JSON
             cl.createMember();
             cl.addToHeader(0, `${this.indent}void to_json(nlohmann::json &j, const ${className} &c) {\n`);
