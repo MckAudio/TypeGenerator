@@ -1,5 +1,5 @@
 import { ISerializer, SerializerData, SerializerDataArray } from "./ISerializer";
-import { ArrayType, ClassType, EnumDefinition, EnumType, LinkType, SimpleType } from "./types";
+import { ArrayType, ClassType, DictType, EnumDefinition, EnumType, LinkType, SimpleType } from "./types";
 import { GetDate } from "./tools";
 import { GetCppNamespace, GetCppType, JsonLibrary } from "./SerializerTools";
 import path from "path";
@@ -123,5 +123,17 @@ export class HppSerializer extends ISerializer {
         }
         tmp += `};\n`;
         this.classes[className].addToContent(0, tmp);
+    }
+
+    addDictMember(className: string, name: string, member: DictType): void {
+        let type = `${GetCppNamespace(member.items as LinkType)}${GetCppType(member.items)}`;
+        let tmp = `${this.indent}\tstd::map<std::string, ${type}> ${name}{};\n`;
+        this.classes[className].addToContent(0, tmp);
+        this.deps.add(`<map>`);
+        this.deps.add(`<string>`);
+        let mi = member.items as LinkType;
+        if (mi.file !== undefined) {
+            this.deps.add(`"${path.basename(mi.file, path.extname(mi.file))}.${this.extension}"`);
+        }
     }
 }

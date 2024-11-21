@@ -1,5 +1,5 @@
 import path from 'path';
-import { Dictionary, ClassType, SimpleType, ArrayType, LinkType, FileStore, FileType, IsSimpleType, EnumType, EnumDefinition } from "./types";
+import { Dictionary, ClassType, SimpleType, ArrayType, LinkType, FileStore, FileType, IsSimpleType, EnumType, EnumDefinition, DictType } from "./types";
 import { ISerializer, SerializerMap } from './ISerializer';
 
 import fs, { link, mkdirSync, writeFileSync } from 'fs';
@@ -75,7 +75,6 @@ function ReadClass(fileName: string, name: string, data?: ClassType): any {
                 let arrVal = arr.items as ArrayType;
             }
             sources[fileId].addArrayMember(name, entry[0], entry[1] as ArrayType);
-
         } else if (entry[1].type === "link") {
             let link = entry[1] as LinkType;
             let linkFileName = fileMap[fileId].path;
@@ -89,6 +88,23 @@ function ReadClass(fileName: string, name: string, data?: ClassType): any {
             sources[fileId].addLinkMember(name, entry[0], entry[1] as LinkType);
         } else if (entry[1].type === "enum") {
             sources[fileId].addEnumMember(name, entry[0], entry[1] as EnumType);
+        } else if (entry[1].type === "dict") {
+            let dict = entry[1] as DictType;
+            if (IsSimpleType(dict.items)) {
+                let dictVal = dict.items as SimpleType;
+            } else if (dict.items.type == "link") {
+                let link = dict.items as LinkType;
+                let linkFileName = fileMap[fileId].path;
+                if (link.file !== undefined) {
+                    linkFileName = path.join(path.dirname(fileMap[fileId].path), link.file);
+                }
+                ReadClass(linkFileName, link.name);
+                if (link.file !== undefined) {
+                    let ns = fileMap[path.basename(linkFileName, path.extname(linkFileName))].namespace;
+                    (dict.items as LinkType).namespace = ns;
+                }
+            }
+            sources[fileId].addDictMember(name, entry[0], dict);
         }
     });
 }
@@ -180,7 +196,7 @@ function WriteJsonFile(file: string) {
                                 Object.entries(fo.classes[cn].members).forEach(tm => {
                                     if (tm[1].type === "link") {
                                         tm[1].name = `${linkKey}_${tm[1].name}`;
-                                    } else if (tm[1].type === "array" && tm[1].items.type === "link") {
+                                    } else if ((tm[1].type === "array" || tm[1].type === "dict") && tm[1].items.type === "link") {
                                         tm[1].items.name = `${linkKey}_${tm[1].items.name}`;
                                     }
                                 });

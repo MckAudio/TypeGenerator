@@ -1,4 +1,4 @@
-import { ArrayType, ClassType, Dictionary, EnumDefinition, EnumType, LinkType, SimpleType } from "./types";
+import { ArrayType, ClassType, Dictionary, DictType, EnumDefinition, EnumType, LinkType, SimpleType } from "./types";
 import path from "path";
 import fs from "fs";
 
@@ -20,8 +20,7 @@ export class SerializerDataArray {
 
     getOutput(): string {
         let tmp = "";
-        for (let i = 0; i < this.len; i++)
-        {
+        for (let i = 0; i < this.len; i++) {
             tmp += `${this.data[i].header}${this.data[i].content}${this.data[i].footer}`;
         }
         return tmp;
@@ -61,6 +60,8 @@ abstract class ISerializerFn {
     abstract addArrayMember(className: string, name: string, member: ArrayType): void;
 
     abstract addEnumMember(className: string, name: string, member: EnumType): void;
+
+    abstract addDictMember(className: string, name: string, member: DictType): void;
 
     abstract writeToFile(outDir: string): void;
 }
@@ -103,7 +104,7 @@ export abstract class ISerializer extends ISerializerFn {
                 this.store.content += e[1].getOutput();
             });
 
-            Object.entries(this.classes).sort((a,b) => a[1].sortId - b[1].sortId).forEach(cl => {
+            Object.entries(this.classes).sort((a, b) => a[1].sortId - b[1].sortId).forEach(cl => {
                 this.store.content += cl[1].getOutput();
             });
             this.source = this.store.getOutput();
@@ -197,6 +198,16 @@ export class SerializerMap extends ISerializerFn {
         }
         this.serializers.forEach(s => {
             s.addEnumMember(className, name, member);
+        });
+        this.classes[className].add(name);
+    }
+
+    addDictMember(className: string, name: string, member: DictType): void {
+        if (this.classes[className].has(name)) {
+            return;
+        }
+        this.serializers.forEach(s => {
+            s.addDictMember(className, name, member);
         });
         this.classes[className].add(name);
     }

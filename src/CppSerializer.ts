@@ -1,7 +1,7 @@
 import { ISerializer, SerializerData, SerializerDataArray } from "./ISerializer";
 import { GetCppNamespace, GetCppType, GetRapidType, JsonLibrary } from "./SerializerTools";
 import { GetDate } from "./tools";
-import { ArrayType, ClassType, EnumDefinition, EnumType, IsSimpleType, LinkType, SimpleType } from "./types";
+import { ArrayType, ClassType, DictType, EnumDefinition, EnumType, IsSimpleType, LinkType, SimpleType } from "./types";
 
 export class CppSerializer extends ISerializer {
     private includes: Array<string> = [];
@@ -159,7 +159,6 @@ export class CppSerializer extends ISerializer {
                 cl.addToContent(i, `${this.indent}\twriter.EndArray();\n\n`);
             }
 
-
             // From JSON
             cl.addToContent(2, `${this.indent}\t${name}.clear();\n`);
             cl.addToContent(2, `${this.indent}\tfor(auto &v : obj["${name}"].GetArray()) {\n`);
@@ -215,6 +214,27 @@ export class CppSerializer extends ISerializer {
                 cl.addToContent(1, `${this.indent}\t}\n`);
             } else {
                 cl.addToContent(1, `${this.indent}\tc.${name} = j.at("${name}").get<${GetCppType(member)}>();\n`);
+            }
+        }
+    }
+
+    addDictMember(className: string, name: string, member: DictType): void {
+        let cl = this.classes[className];
+        if (this.lib === JsonLibrary.RapidJson) {
+            // To JSON
+        } else if (this.lib === JsonLibrary.Nlohmann) {
+            // To JSON
+            cl.addToContent(0, `${this.indent}\tj["${name}"] = c.${name};\n`);
+            // From JSON
+            let type = `${GetCppNamespace(member.items as LinkType)}${GetCppType(member.items)}`;
+            if (member.newProperty === true) {
+                cl.addToContent(1, `${this.indent}\ttry {\n`);
+                cl.addToContent(1, `${this.indent}\t\tc.${name} = j.at("${name}").get<std::map<std::string, ${type}>>();\n`);
+                cl.addToContent(1, `${this.indent}\t} catch(...) {\n`);
+                cl.addToContent(1, `${this.indent}\t\tc.${name} = std::map<std::string, ${type}>();\n`);
+                cl.addToContent(1, `${this.indent}\t}\n`);
+            } else {
+                cl.addToContent(1, `${this.indent}\tc.${name} = j.at("${name}").get<std::map<std::string, ${type}>>();\n`);
             }
         }
     }

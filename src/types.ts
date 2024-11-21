@@ -25,7 +25,7 @@ export class EnumDefinition {
 export class ClassType extends BaseType {
     type: "class" | "struct" = "class";
     parent?: string;
-    members: Dictionary<SimpleType | LinkType | ArrayType | EnumType> = {};
+    members: Dictionary<SimpleType | LinkType | ArrayType | EnumType | DictType> = {};
 }
 
 export type T_FloatSignature = "float" | "double" | "float32" | "float64" | "f32" | "f64";
@@ -48,6 +48,12 @@ export class ArrayType extends BaseType {
     type: "array" = "array";
     visibility?: "public" | "protected" | "private";
     items: SimpleType | LinkType | ArrayType = new SimpleType();
+}
+
+export class DictType extends BaseType {
+    type: "dict" = "dict";
+    visibility?: "public" | "protected" | "private";
+    items: SimpleType | LinkType = new SimpleType();
 }
 
 export class LinkType extends BaseType {
