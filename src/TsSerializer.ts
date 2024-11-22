@@ -38,38 +38,115 @@ export class TsSerializer extends ISerializer {
     }
 
     addClassMember(name: string, member: ClassType) {
+        this.classes[name] = new SerializerDataArray();
+        let cl = this.classes[name];
+
         let tmp = new SerializerData();
         tmp.sortId = this.sortId++;
-        tmp.header = `${this.indent}export class ${name} `;
+        cl.createMember();
+        cl.addToHeader(0, `${this.indent}export class ${name} `);
         if (member.parent !== undefined) {
-            tmp.header += `extends ${member.parent} `;
+            cl.addToHeader(0, `extends ${member.parent} `);
         }
-        tmp.header += `{\n`;
+        cl.addToHeader(0, `{\n`);
 
-        tmp.footer = `${this.indent}\tconstructor() {\n`;
+        cl.createMember();
+        cl.addToHeader(1, `${this.indent}\tconstructor(props?: Dictionary<any>) {\n`);
         if (member.parent !== undefined) {
-            tmp.footer += `${this.indent}\t\tsuper();\n`;
+            cl.addToHeader(1, `${this.indent}\t\tsuper(props);\n`);
         }
-        tmp.footer += `${this.indent}\t}\n`;
-        tmp.footer += `${this.indent}}\n\n`;
+        cl.addToContent(1, `${this.indent}\t\tif (props !== undefined) {\n`);
+        cl.addToContent(1, `${this.indent}\t\t\tObject.entries(props).forEach(p => {\n`);
+        cl.addToContent(1, `${this.indent}\t\t\t\tif (this.hasOwnProperty(p[0])) {\n`);
+        cl.addToContent(1, `${this.indent}\t\t\t\t\tthis[p[0]] = p[1];\n`);
+        cl.addToContent(1, `${this.indent}\t\t\t\t}\n`);
+        cl.addToContent(1, `${this.indent}\t\t\t});\n`);
+        cl.addToContent(1, `${this.indent}\t\t}\n`);
+        cl.addToFooter(1, `${this.indent}\t}\n`);
 
-        this.classes[name] = new SerializerDataArray();
-        this.classes[name].addMember(tmp);
+        // Static Dictionary of default values
+        cl.createMember();
+        cl.addToHeader(2, `${this.indent}\tprivate static ${name}_default_values: Dictionary<number | boolean | string> = {\n`);
+        cl.addToFooter(2, `${this.indent}\t}\n`);
+
+        // Static Dictionary of minimum values
+        cl.createMember();
+        cl.addToHeader(3, `${this.indent}\tprivate static ${name}_minimum_values: Dictionary<number> = {\n`);
+        cl.addToFooter(3, `${this.indent}\t}\n`);
+
+        // Static Dictionary of maximum values
+        cl.createMember();
+        cl.addToHeader(4, `${this.indent}\tprivate static ${name}_maximum_values: Dictionary<number> = {\n`);
+        cl.addToFooter(4, `${this.indent}\t}\n`);
+
+        // Static Function to retrieve the default values
+        cl.createMember();
+        cl.addToHeader(5, `${this.indent}\tstatic get_default_value(key: string): number | boolean | string | undefined {\n`);
+        if (member.parent !== undefined) {
+            cl.addToContent(5, `${this.indent}\t\tlet ret = super.get_default_value(key);\r`)
+            cl.addToContent(5, `${this.indent}\t\tif (ret === undefined && this.${name}_default_values.hasOwnProperty(key)) {\n`);
+        } else {
+            cl.addToContent(5, `${this.indent}\t\tlet ret = undefined;\r`)
+            cl.addToContent(5, `${this.indent}\t\tif (this.${name}_default_values.hasOwnProperty(key)) {\n`);
+        }
+        cl.addToContent(5, `${this.indent}\t\t\tret = this.${name}_default_values[key];\n`);
+        cl.addToContent(5, `${this.indent}\t\t}\n`);
+        cl.addToContent(5, `${this.indent}\t\treturn ret;\n`);
+        cl.addToFooter(5, `${this.indent}\t}\n`);
+
+        // Static Function to retrieve the minimum values
+        cl.createMember();
+        cl.addToHeader(6, `${this.indent}\tstatic get_minimum_value(key: string): number | undefined {\n`);
+        if (member.parent !== undefined) {
+            cl.addToContent(6, `${this.indent}\t\tlet ret = super.get_minimum_value(key);\r`)
+            cl.addToContent(6, `${this.indent}\t\tif (ret === undefined && this.${name}_minimum_values.hasOwnProperty(key)) {\n`);
+        } else {
+            cl.addToContent(6, `${this.indent}\t\tlet ret = undefined;\r`)
+            cl.addToContent(6, `${this.indent}\t\tif (this.${name}_minimum_values.hasOwnProperty(key)) {\n`);
+        }
+        cl.addToContent(6, `${this.indent}\t\t\tret = this.${name}_minimum_values[key];\n`);
+        cl.addToContent(6, `${this.indent}\t\t}\n`);
+        cl.addToContent(6, `${this.indent}\t\treturn ret;\n`);
+        cl.addToFooter(6, `${this.indent}\t}\n`);
+
+        // Static Function to retrieve the maximum values
+        cl.createMember();
+        cl.addToHeader(7, `${this.indent}\tstatic get_maximum_value(key: string): number | undefined {\n`);
+        if (member.parent !== undefined) {
+            cl.addToContent(7, `${this.indent}\t\tlet ret = super.get_maximum_value(key);\r`)
+            cl.addToContent(7, `${this.indent}\t\tif (ret === undefined && this.${name}_maximum_values.hasOwnProperty(key)) {\n`);
+        } else {
+            cl.addToContent(7, `${this.indent}\t\tlet ret = undefined;\r`)
+            cl.addToContent(7, `${this.indent}\t\tif (this.${name}_maximum_values.hasOwnProperty(key)) {\n`);
+        }
+        cl.addToContent(7, `${this.indent}\t\t\tret = this.${name}_maximum_values[key];\n`);
+        cl.addToContent(7, `${this.indent}\t\t}\n`);
+        cl.addToContent(7, `${this.indent}\t\treturn ret;\n`);
+        cl.addToFooter(7, `${this.indent}\t}\n`);
+
+        cl.addToFooter(7, `${this.indent}}\n\n`);
     }
 
     addSimpleMember(className: string, name: string, member: SimpleType) {
-        let tmp = "";
-        tmp += `${this.indent}\t${name}: ${GetTsType(member)}`;
+        let cl = this.classes[className];
+        let defString = "";
         if (member.default !== undefined) {
             if (member.type === "string") {
-                tmp += ` = \"${member.default}\";\n`;
+                defString = `\"${member.default}\"`;
             } else {
-                tmp += ` = ${member.default};\n`;
+                defString = `${member.default}`;
             }
         } else {
-            tmp += ` = ${GetTsDefault(member)};\n`;
+            defString = `${GetTsDefault(member)}`;
         }
-        this.classes[className].addToContent(0, tmp);
+        cl.addToContent(0, `${this.indent}\t${name}: ${GetTsType(member)} = ${defString};\n`);
+        cl.addToContent(2, `${this.indent}\t\t\"${name}\": ${defString},\n`);
+        if (member.minimum !== undefined) {
+            cl.addToContent(3, `${this.indent}\t\t\"${name}\": ${member.minimum},\n`);
+        }
+        if (member.maximum !== undefined) {
+            cl.addToContent(4, `${this.indent}\t\t\"${name}\": ${member.maximum},\n`);
+        }
     }
 
     addLinkMember(className: string, name: string, member: LinkType) {
