@@ -167,7 +167,7 @@ export class TsSerializer extends ISerializer {
                 let file = (member.items.items as LinkType).file;
                 if (file !== undefined) {
                     let bn = path.basename(file, path.extname(file));
-                    tmp = `${this.indent}\t${name}: Array<Array<${bn}.${GetTsType(member.items)}>> = [];\n`;
+                    tmp = `${this.indent}\t${name}: Array<Array<${bn}.${GetTsType(member.items.items)}>> = [];\n`;
                     this.deps.add(`${bn}`);
                 }
             }
