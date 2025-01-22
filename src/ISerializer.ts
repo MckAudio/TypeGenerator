@@ -1,4 +1,4 @@
-import { ArrayType, ClassType, Dictionary, LinkType, SimpleType } from "./types";
+import { ArrayType, ClassType, Dictionary, DictType, EnumDefinition, EnumType, LinkType, SimpleType } from "./types";
 import path from "path";
 import fs from "fs";
 
@@ -20,8 +20,7 @@ export class SerializerDataArray {
 
     getOutput(): string {
         let tmp = "";
-        for (let i = 0; i < this.len; i++)
-        {
+        for (let i = 0; i < this.len; i++) {
             tmp += `${this.data[i].header}${this.data[i].content}${this.data[i].footer}`;
         }
         return tmp;
@@ -50,6 +49,8 @@ export class SerializerDataArray {
 };
 
 abstract class ISerializerFn {
+    abstract addEnumDefinition(name: string, member: EnumDefinition): void;
+
     abstract addClassMember(name: string, member: ClassType): void;
 
     abstract addSimpleMember(className: string, name: string, member: SimpleType): void;
@@ -57,6 +58,10 @@ abstract class ISerializerFn {
     abstract addLinkMember(className: string, name: string, member: LinkType): void;
 
     abstract addArrayMember(className: string, name: string, member: ArrayType): void;
+
+    abstract addEnumMember(className: string, name: string, member: EnumType): void;
+
+    abstract addDictMember(className: string, name: string, member: DictType): void;
 
     abstract writeToFile(outDir: string): void;
 }
@@ -66,21 +71,22 @@ export abstract class ISerializer extends ISerializerFn {
     protected extension: string = "none";
 
     author: string;
-    namespaceName?: string;
+    namespaces: Array<string>;
     fileName: string;
     sortId: number = 0;
     private source: string = "";
     private finished: boolean = false;
     protected classes: Dictionary<SerializerDataArray> = {};
+    protected enums: Dictionary<SerializerData> = {};
 
     protected indent: string = "";
 
-    protected constructor(fileName: string, author: string, extension: string, namespace?: string) {
+    protected constructor(fileName: string, author: string, extension: string, namespace?: Array<string>) {
         super();
         this.fileName = fileName;
         this.author = author;
         this.extension = extension;
-        this.namespaceName = namespace;
+        this.namespaces = namespace !== undefined ? namespace : [];
         this.begin();
     }
 
@@ -93,8 +99,12 @@ export abstract class ISerializer extends ISerializerFn {
     getOutput(): string {
         if (this.finished === false) {
             this.end();
-            this.store.content = "";
-            Object.entries(this.classes).sort((a,b) => a[1].sortId - b[1].sortId).forEach(cl => {
+            //this.store.content = "";
+            Object.entries(this.enums).sort((a, b) => a[1].sortId - b[1].sortId).forEach(e => {
+                this.store.content += e[1].getOutput();
+            });
+
+            Object.entries(this.classes).sort((a, b) => a[1].sortId - b[1].sortId).forEach(cl => {
                 this.store.content += cl[1].getOutput();
             });
             this.source = this.store.getOutput();
@@ -115,10 +125,26 @@ export abstract class ISerializer extends ISerializerFn {
 
 export class SerializerMap extends ISerializerFn {
     private serializers: Array<ISerializer> = [];
-    private classes: Dictionary<Set<string>> = {};// = new Set<string>();
+    private classes: Dictionary<Set<string>> = {};
+    private enums: Dictionary<Set<string>> = {};
 
     addSerializer(serializer: ISerializer): void {
         this.serializers.push(serializer);
+    }
+
+    hasEnumDefinition(name: string): boolean {
+        return this.enums.hasOwnProperty(name);
+    }
+
+    addEnumDefinition(name: string, member: EnumDefinition): boolean {
+        if (this.enums.hasOwnProperty(name)) {
+            return false;
+        }
+        this.enums[name] = new Set<string>();
+        this.serializers.forEach(s => {
+            s.addEnumDefinition(name, member);
+        });
+        return true;
     }
 
     hasClassMember(name: string): boolean {
@@ -162,6 +188,26 @@ export class SerializerMap extends ISerializerFn {
         }
         this.serializers.forEach(s => {
             s.addArrayMember(className, name, member);
+        });
+        this.classes[className].add(name);
+    }
+
+    addEnumMember(className: string, name: string, member: EnumType): void {
+        if (this.classes[className].has(name)) {
+            return;
+        }
+        this.serializers.forEach(s => {
+            s.addEnumMember(className, name, member);
+        });
+        this.classes[className].add(name);
+    }
+
+    addDictMember(className: string, name: string, member: DictType): void {
+        if (this.classes[className].has(name)) {
+            return;
+        }
+        this.serializers.forEach(s => {
+            s.addDictMember(className, name, member);
         });
         this.classes[className].add(name);
     }
